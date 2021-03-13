@@ -1,4 +1,4 @@
-package DO;
+package DO.mat;
 
 import java.util.Arrays;
 
@@ -7,22 +7,37 @@ import java.util.Arrays;
  * @since 06-Mar-21
  */
 public abstract class AbstractMatrix<T> implements IMatrix<T> {
-    private Object[][] data;
+    private final Object[][] data;
 
     public AbstractMatrix(int rows, int cols) {
         data = new Object[rows][cols];
     }
 
-    protected final void setValue(int row, int col, T value) {
-        data[row][col] = value;
-    }
-
-    protected final int rows() {
+    @Override
+    public final int rows() {
         return data.length;
     }
 
-    protected final int cols() {
+    @Override
+    public final int cols() {
         return data[0].length;
+    }
+
+    @Override
+    public void setValue(Index index, T value) {
+        if (isIndexValid(index)) {
+            data[index.getRow()][index.getColumn()] = value;
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public T getValue(Index index) {
+        if (!isIndexValid(index)) {
+            return null;
+        }
+
+        return (T)data[index.getRow()][index.getColumn()];
     }
 
     protected final int cols(int row) {
@@ -35,21 +50,21 @@ public abstract class AbstractMatrix<T> implements IMatrix<T> {
      * @return True in case index differs from null, and inside matrix bounds. False otherwise.
      */
     protected final boolean isIndexValid(Index index) {
-        return (index != null && isInRange(index.getRow(), 0, rows()) && isInRange(index.getColumn(), 0, cols(index.getRow())));
+        return (index != null && isIndexValid(index.getRow(), index.getColumn()));
+    }
+
+    /**
+     * Helper method used to make sure a specified index is valid. (Differs from null, and inside matrix bounds.)
+     * @param row The row index to validate.
+     * @param column The col index to validate.
+     * @return True in case index differs from null, and inside matrix bounds. False otherwise.
+     */
+    protected final boolean isIndexValid(int row, int col) {
+        return isInRange(row, 0, rows()) && isInRange(col, 0, cols(row));
     }
 
     private static boolean isInRange(int value, int min, int max) {
         return value >= min && value <= max;
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public T val(Index index) {
-        if (!isIndexValid(index)) {
-            return null;
-        }
-
-        return (T)data[index.getRow()][index.getColumn()];
     }
 
     @Override

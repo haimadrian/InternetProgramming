@@ -1,4 +1,4 @@
-package DO;
+package DO.mat;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,6 +11,10 @@ public class StandardMatrix extends AbstractBinaryMatrix {
 
     public StandardMatrix(int rows, int cols) {
         super(rows, cols);
+    }
+
+    public StandardMatrix(int rows, int cols, boolean isRandom) {
+        super(rows, cols, isRandom);
     }
 
     @Override
