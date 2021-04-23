@@ -1,8 +1,10 @@
-package DO.graph;
+package org.hit.internetprogramming.haim.matrix.common.graph;
 
 
-import DO.mat.IMatrix;
-import DO.mat.Index;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.hit.internetprogramming.haim.matrix.common.mat.IMatrix;
+import org.hit.internetprogramming.haim.matrix.common.mat.Index;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -10,18 +12,30 @@ import java.util.stream.Collectors;
 /**
  * This class represents a matrix that adapts the Graph API.<br/>
  * The implementation is according to the Adapter pattern, where we implement one interface and holds a data member of another type.<br/>
- * In matrices, adjacent vertices are neighbors that their value is 1, and not 0.
+ * In matrices, reachable vertices are neighbors that have {@link IMatrix#hasValue(Index) value} at their location.
+ * @author Haim Adrian
+ * @since 06-Mar-21
+ * @see IGraph
+ * @see IMatrix
  */
-public class MatrixAsGraph<T> implements IGraph<Index> {
+public class MatrixGraphAdapter<T> implements IGraph<Index> {
+   /**
+    * The underlying matrix, which will adapt the Graph API.
+    */
    private final IMatrix<T> matrix;
+
+   /**
+    * Root of the graph. Must be a valid {@link Index} at the specified matrix.
+    */
    private final Index root;
 
    /**
-    * Constructs a new {@link MatrixAsGraph}
-    * @param matrix
-    * @param root
+    * Constructs a new {@link MatrixGraphAdapter}
+    * @param matrix The underlying matrix, which will adapt the Graph API.
+    * @param root Root of the graph. Must be a valid {@link Index} at the specified matrix.
     */
-   public MatrixAsGraph(IMatrix<T> matrix, Index root) {
+   @JsonCreator
+   public MatrixGraphAdapter(@JsonProperty("matrix") IMatrix<T> matrix, @JsonProperty("root") Index root) {
       this.matrix = matrix;
       this.root = root;
    }
@@ -32,12 +46,18 @@ public class MatrixAsGraph<T> implements IGraph<Index> {
    }
 
    @Override
-   public Collection<Index> getAdjacentVertices(Index vertex) {
+   public List<Index> getAdjacentVertices(Index vertex) {
+      return matrix.neighbors(vertex);
+   }
+
+   @Override
+   public List<Index> getReachableVertices(Index vertex) {
       if (matrix.hasValue(vertex)) {
-         // Collect neighbors that contains some value in them. For binary matrices, this will collect neighbors with value=1 only.
+         // Collect neighbors that contain some value in them. For binary matrices, this will collect neighbors with value=1 only.
          return matrix.neighbors(vertex).stream().filter(matrix::hasValue).collect(Collectors.toList());
       } else {
-         return new ArrayList<>(); // If there is no vertex at the specified index, return empty list
+         // If there is no vertex at the specified index, return empty list
+         return new ArrayList<>();
       }
    }
 
@@ -60,6 +80,10 @@ public class MatrixAsGraph<T> implements IGraph<Index> {
       }
 
       return paths;
+   }
+
+   public IMatrix<T> getMatrix() {
+      return matrix;
    }
 
    /**

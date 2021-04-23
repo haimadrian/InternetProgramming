@@ -1,7 +1,7 @@
 package driver;
 
 import DO.graph.IGraph;
-import DO.graph.MatrixAsGraph;
+import DO.graph.MatrixGraphAdapter;
 import DO.mat.*;
 
 import java.lang.reflect.InvocationTargetException;
@@ -40,7 +40,7 @@ public class MatricesMain {
 
         for (int i = 0; i < numOfTests; i++) {
             AbstractBinaryMatrix mat = cls.getDeclaredConstructor(int.class, int.class, boolean.class).newInstance(matDim, matDim, true);
-            var matrixAsGraph = new MatrixAsGraph<Integer>(mat, new Index(0, 0));
+            var matrixAsGraph = new MatrixGraphAdapter<Integer>(mat, new Index(0, 0));
             paths = matrixAsGraph.findPaths(from, to);
             if (paths.size() > maxPaths.size()) {
                 maxPaths = paths;

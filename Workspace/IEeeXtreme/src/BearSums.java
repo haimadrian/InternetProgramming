@@ -8,6 +8,7 @@ import java.util.stream.IntStream;
  * @since 06-Mar-21
  */
 public class BearSums {
+
     public static void main (String[] args) {
         try (Scanner in = new Scanner(System.in)) {
             int testCases = in.nextInt();
@@ -16,33 +17,76 @@ public class BearSums {
             for (int k = 0; k < testCases; k++) {
                 // First line of each test case is S and E, where S is the sum, and E is the amount of elements in list.
                 String currLine = in.nextLine().trim();
-                IntPair sumAndListSize = new IntPair(Arrays.stream(currLine.split(" ")).mapToInt(Integer::parseInt).toArray());
-                Integer sum = sumAndListSize.getLeft();
+                int[] sumAndListSize = Arrays.stream(currLine.split(" ")).mapToInt(Integer::parseInt).toArray();
+                Integer sum = sumAndListSize[0];
 
                 // Now read the elements in list. We maintain a list so we can find the first match according to input order.
                 currLine = in.nextLine().trim();
-                IntPair pair = null;
+                Integer num1 = null;
                 if (!currLine.isEmpty()) {
                     List<Integer> elements = Arrays.stream(currLine.split(" ")).map(Integer::parseInt).collect(Collectors.toList());
 
-                    // Make a set out of all elements, so we can find a match in O(1)
-                    Map<Integer, List<Integer>> elementIndices = mapElementsToTheirIndices(elements);
+                    Set<Integer> complements = new HashSet<>();
+                    for (Integer currNum : elements) {
+                        // If current number is a complement, it means we have a match and we can stop. This is a first match.
+                        if (complements.contains(currNum)) {
+                            num1 = currNum;
+                            break;
+                        }
 
-                    // Keep all pairs, so we will select the first complete pair.
-                    // Each element in the list is a matrix of 2X2, where first row is the pair, and second row is the index of that pair in the input.
-                    List<Pair<IntPair>> pairs = findAllPairsWithSpecificSum(sum, elements, elementIndices);
-
-                    pair = findFirstCompletePair(pairs);
+                        // This way we will find later a complement, and break on the first match.
+                        complements.add(sum - currNum);
+                    }
                 }
 
-                if (pair == null) {
+                if (num1 == null) {
                     System.out.println("!OK");
                 } else {
-                    System.out.println(pair.getLeft() + " " + pair.getRight());
+                    int num2 = sum - num1;
+                    sum = Integer.max(num1, num2);
+                    num1 = Integer.min(num1, num2);
+                    num2 = sum;
+                    System.out.println(num1 + " " + num2);
                 }
             }
         }
     }
+
+//    public static void main (String[] args) {
+//        try (Scanner in = new Scanner(System.in)) {
+//            int testCases = in.nextInt();
+//            in.nextLine(); // Discard line terminator
+//
+//            for (int k = 0; k < testCases; k++) {
+//                // First line of each test case is S and E, where S is the sum, and E is the amount of elements in list.
+//                String currLine = in.nextLine().trim();
+//                IntPair sumAndListSize = new IntPair(Arrays.stream(currLine.split(" ")).mapToInt(Integer::parseInt).toArray());
+//                Integer sum = sumAndListSize.getLeft();
+//
+//                // Now read the elements in list. We maintain a list so we can find the first match according to input order.
+//                currLine = in.nextLine().trim();
+//                IntPair pair = null;
+//                if (!currLine.isEmpty()) {
+//                    List<Integer> elements = Arrays.stream(currLine.split(" ")).map(Integer::parseInt).collect(Collectors.toList());
+//
+//                    // Make a set out of all elements, so we can find a match in O(1)
+//                    Map<Integer, List<Integer>> elementIndices = mapElementsToTheirIndices(elements);
+//
+//                    // Keep all pairs, so we will select the first complete pair.
+//                    // Each element in the list is a matrix of 2X2, where first row is the pair, and second row is the index of that pair in the input.
+//                    List<Pair<IntPair>> pairs = findAllPairsWithSpecificSum(sum, elements, elementIndices);
+//
+//                    pair = findFirstCompletePair(pairs);
+//                }
+//
+//                if (pair == null) {
+//                    System.out.println("!OK");
+//                } else {
+//                    System.out.println(pair.getLeft() + " " + pair.getRight());
+//                }
+//            }
+//        }
+//    }
 
     /**
      * This function traverse the list of detected pairs and finds the first complete pair, based on each pair's indices.
