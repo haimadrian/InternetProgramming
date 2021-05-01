@@ -76,16 +76,14 @@ public class MatrixClientMain {
                         saveGraphToFile(scanner);
                         break;
                     }
-                    case GENERATE_RANDOM_GRAPH: {
-                        executeIndexedAction(scanner, "Please enter dimension in tuple format. e.g. (5, 5)", ActionType.GENERATE_RANDOM_GRAPH, true);
+                    case GENERATE_RANDOM_GRAPH_STANDARD:
+                    case GENERATE_RANDOM_GRAPH_CROSS: {
+                        executeIndexedAction(scanner, "Please enter dimension in tuple format. e.g. (5, 5)", choice.getActionType(), true);
                         break;
                     }
-                    case GET_NEIGHBORS: {
-                        executeIndexedAction(scanner, "Please enter index in tuple format. e.g. (1, 1)", ActionType.GET_NEIGHBORS, false);
-                        break;
-                    }
+                    case GET_NEIGHBORS:
                     case GET_REACHABLES: {
-                        executeIndexedAction(scanner, "Please enter index in tuple format. e.g. (1, 1)", ActionType.GET_REACHABLES, false);
+                        executeIndexedAction(scanner, "Please enter index in tuple format. e.g. (1, 1)", choice.getActionType(), false);
                         break;
                     }
                     case PRINT_GRAPH: {

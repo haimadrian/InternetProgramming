@@ -2,7 +2,6 @@ package org.hit.internetprogramming.haim.matrix.common.mat;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import org.hit.internetprogramming.haim.matrix.common.graph.MatrixGraphAdapter;
 
 import java.util.List;
 

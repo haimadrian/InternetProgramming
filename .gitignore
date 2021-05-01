@@ -89,3 +89,5 @@ gradlew
 gradle.bat
 gradlew.bat
 gradle/
+
+*.json

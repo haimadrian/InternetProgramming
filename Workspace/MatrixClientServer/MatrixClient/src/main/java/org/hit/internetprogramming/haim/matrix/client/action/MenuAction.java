@@ -11,7 +11,8 @@ public enum MenuAction {
     CREATE_GRAPH("Create Graph (Enter matrix and send it to server)", ActionType.PUT_GRAPH),
     LOAD_GRAPH("Load Graph From File (Load graph and send it to server)", null),
     SAVE_GRAPH("Save Graph To File (Get graph from server and save it)", null),
-    GENERATE_RANDOM_GRAPH("Generate Random Graph", ActionType.GENERATE_RANDOM_GRAPH),
+    GENERATE_RANDOM_GRAPH_STANDARD("Generate Random Graph (Using standard matrix)", ActionType.GENERATE_RANDOM_GRAPH_STANDARD),
+    GENERATE_RANDOM_GRAPH_CROSS("Generate Random Graph (Using cross matrix)", ActionType.GENERATE_RANDOM_GRAPH_CROSS),
     GET_NEIGHBORS("Get Neighbor Vertices", ActionType.GET_NEIGHBORS),
     GET_REACHABLES("Get Reachable Vertices", ActionType.GET_REACHABLES),
     PRINT_GRAPH("Print Graph", ActionType.PRINT_GRAPH);

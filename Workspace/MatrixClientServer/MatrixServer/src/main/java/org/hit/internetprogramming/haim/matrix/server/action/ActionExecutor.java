@@ -27,11 +27,12 @@ public class ActionExecutor {
     private ActionExecutor() {
         actions = new HashMap<>();
         actions.put(ActionType.PUT_GRAPH, PutGraph.class);
-        actions.put(ActionType.GENERATE_RANDOM_GRAPH, GenerateRandomGraph.class);
-        actions.put(ActionType.GET_NEIGHBORS, GetNeighbors.class);
-        actions.put(ActionType.GET_REACHABLES, GetReachables.class);
-        actions.put(ActionType.PRINT_GRAPH, PrintGraph.class);
         actions.put(ActionType.GET_GRAPH, GetGraph.class);
+        actions.put(ActionType.GENERATE_RANDOM_GRAPH_STANDARD, GenerateRandomGraph.class);
+        actions.put(ActionType.GENERATE_RANDOM_GRAPH_CROSS, GenerateRandomGraph.class);
+        actions.put(ActionType.GET_NEIGHBORS, GetVertices.class);
+        actions.put(ActionType.GET_REACHABLES, GetVertices.class);
+        actions.put(ActionType.PRINT_GRAPH, PrintGraph.class);
     }
 
     public static ActionExecutor getInstance() {

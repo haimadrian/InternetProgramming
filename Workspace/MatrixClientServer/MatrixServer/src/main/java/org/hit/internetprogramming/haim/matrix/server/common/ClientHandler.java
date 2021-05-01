@@ -3,7 +3,6 @@ package org.hit.internetprogramming.haim.matrix.server.common;
 import lombok.extern.log4j.Log4j2;
 import org.hit.internetprogramming.haim.matrix.common.comms.HttpStatus;
 import org.hit.internetprogramming.haim.matrix.server.common.exception.FavIconException;
-import org.hit.internetprogramming.haim.matrix.server.common.exception.WebException;
 
 import java.io.*;
 import java.net.SocketTimeoutException;

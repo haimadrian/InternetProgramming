@@ -51,7 +51,7 @@ public class TCPServer {
 
     /**
      * Maximum amount of threads that will serve client requests in parallel.
-     * If there are more requests than maximum workers, the requests will be kept in a queue.
+     * If there are more requests than maximum workers, the requests will be rejected.
      */
     private final int maxPoolSize;
 
@@ -86,7 +86,7 @@ public class TCPServer {
      * @param port The port we are listening on
      * @param corePoolSize Minimum amount of threads that will serve client requests in parallel
      * @param maxPoolSize Maximum amount of threads that will serve client requests in parallel. If there are more requests
-     * than maximum workers, the requests will be kept in a queue.
+     * than maximum workers, the requests will be rejected.
      * @param requestHandler A request handler to use for handling client requests
      */
     public TCPServer(int port, int corePoolSize, int maxPoolSize, RequestHandler requestHandler) {

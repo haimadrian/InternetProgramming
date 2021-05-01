@@ -4,6 +4,8 @@ import org.hit.internetprogramming.haim.matrix.common.action.ActionType;
 import org.hit.internetprogramming.haim.matrix.common.comms.Request;
 import org.hit.internetprogramming.haim.matrix.common.comms.Response;
 import org.hit.internetprogramming.haim.matrix.common.graph.MatrixGraphAdapter;
+import org.hit.internetprogramming.haim.matrix.common.mat.CrossMatrix;
+import org.hit.internetprogramming.haim.matrix.common.mat.IMatrix;
 import org.hit.internetprogramming.haim.matrix.common.mat.Index;
 import org.hit.internetprogramming.haim.matrix.common.mat.StandardMatrix;
 import org.hit.internetprogramming.haim.matrix.server.action.Action;
@@ -23,7 +25,14 @@ public class GenerateRandomGraph implements Action {
             dimension = new Index(5, 5);
         }
 
-        StandardMatrix matrix = new StandardMatrix(dimension.getRow(), dimension.getColumn(), true);
+        IMatrix<Integer> matrix;
+
+        if (actionContext.getRequest().getActionType() == ActionType.GENERATE_RANDOM_GRAPH_CROSS) {
+            matrix = new CrossMatrix(dimension.getRow(), dimension.getColumn(), true);
+        } else {
+            matrix = new StandardMatrix(dimension.getRow(), dimension.getColumn(), true);
+        }
+
         Index root = new Index(0, 0);
         matrix.setValue(root, 1);
         MatrixGraphAdapter<Integer> graph = new MatrixGraphAdapter<>(matrix, root);

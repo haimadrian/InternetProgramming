@@ -31,9 +31,14 @@ import static org.hit.internetprogramming.haim.matrix.server.common.ClientHandle
 @Log4j2
 public class MatrixClientHandler implements RequestHandler {
     /**
-     * Support generating a random graph, using HTTP GET request. e.g. GET localhost:1234/graph/generate?row=3&col=3
+     * Support generating a random graph, using HTTP GET request. e.g. GET localhost:1234/graph/generate/standard?row=3&col=3
      */
-    public static final String GENERATE_GRAPH_PATH = "graph/generate";
+    public static final String GENERATE_GRAPH_STANDARD_PATH = "graph/generate/standard";
+
+    /**
+     * Support generating a random graph, using HTTP GET request. e.g. GET localhost:1234/graph/generate/cross?row=3&col=3
+     */
+    public static final String GENERATE_GRAPH_CROSS_PATH = "graph/generate/cross";
 
     /**
      * Support GETting reachable vertices of a graph, using HTTP GET request. e.g. GET localhost:1234/graph/reachables?row=1&col=2
@@ -203,9 +208,11 @@ public class MatrixClientHandler implements RequestHandler {
         }
 
         Request request;
-        if (httpPathLower.contains(GENERATE_GRAPH_PATH)) {
-            request = new Request(ActionType.GENERATE_RANDOM_GRAPH, fetchIndexFromQuery(httpPathLower, false), true);
-        } else if (httpPathLower.contains(NEIGHBORS_PATH)) {
+        if (httpPathLower.contains(GENERATE_GRAPH_STANDARD_PATH)) {
+            request = new Request(ActionType.GENERATE_RANDOM_GRAPH_STANDARD, fetchIndexFromQuery(httpPathLower, false), true);
+        } else if (httpPathLower.contains(GENERATE_GRAPH_CROSS_PATH)) {
+            request = new Request(ActionType.GENERATE_RANDOM_GRAPH_CROSS, fetchIndexFromQuery(httpPathLower, false), true);
+        }  else if (httpPathLower.contains(NEIGHBORS_PATH)) {
             request = new Request(ActionType.GET_NEIGHBORS, fetchIndexFromQuery(httpPathLower, true), true);
         } else if (httpPathLower.contains(REACHABLES_PATH)) {
             request = new Request(ActionType.GET_REACHABLES, fetchIndexFromQuery(httpPathLower, true), true);
