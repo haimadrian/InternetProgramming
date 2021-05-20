@@ -37,7 +37,7 @@ public class EnhancedGenerics<T extends Runnable> implements ExecutorService {
     private static final AtomicInteger INSTANCE_COUNTER = new AtomicInteger();
 
     /**
-     * Use a logger for debug information
+     * Use a logger for debug information, to shade some light over the darkness of parallel work.
      */
     private static final Logger log = LogManager.getLogger(EnhancedGenerics.class);
 
@@ -54,6 +54,16 @@ public class EnhancedGenerics<T extends Runnable> implements ExecutorService {
     private final Thread consumerThread;
 
     /**
+     * A function to use for conversion of {@link Runnable} to generic type {@code <T>}
+     */
+    private final Function<Runnable, T> defaultRunnableConverterFunction;
+
+    /**
+     * A {@link ReentrantReadWriteLock} to protect critical code parts from concurrent modification exceptions
+     */
+    private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+
+    /**
      * We hold a reference to the {@link #consumerThread} as long as it is waiting for new task, by
      * {@link BlockingQueue#take()}. Once it receives a task, this reference will refer to {@code null}.<br/>
      * The reason for holding a reference to the thread while it is idle, is to get the ability to interrupt the
@@ -66,16 +76,6 @@ public class EnhancedGenerics<T extends Runnable> implements ExecutorService {
     private volatile Thread idleThread;
 
     /**
-     * A function to use for conversion of {@link Runnable} to generic type {@code <T>}
-     */
-    private final Function<Runnable, T> defaultRunnableConverterFunction;
-
-    /**
-     * A {@link ReentrantReadWriteLock} to protect critical code parts from concurrent modification exceptions
-     */
-    private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
-
-    /**
      * A flag to indicate when user asks to stop this single thread pool, such that no additional tasks
      * will be offered, though we will wait for existing tasks execution to be completed.
      */
@@ -83,7 +83,8 @@ public class EnhancedGenerics<T extends Runnable> implements ExecutorService {
 
     /**
      * Same as {@link #stop}, except of the fact that this flag will force stopping execution of running tasks,
-     * without waiting for existing tasks to be executed.
+     * without waiting for existing tasks to be executed.<br/>
+     * We use this flag twice. The second use of it is an indication for "TERMINATED" state.
      */
     private volatile boolean stopNow = false;
 
@@ -125,8 +126,10 @@ public class EnhancedGenerics<T extends Runnable> implements ExecutorService {
                             T task = this.workQueue.take();
                             idleThread = null;
 
-                            // take() is blocking, hence make sure we have not been instructed to shutdown.
-                            if (!stop && !stopNow) {
+                            // take() is blocking, hence make sure we have not been instructed to shutdown while waiting.
+                            // We cannot lock here since it would not let the shutdownNow to interrupt our thread.
+                            // Note that we check stopNow only, and not "stop", because stop should wait for the task to finish.
+                            if (!stopNow) {
                                 debug("Start executing task: " + task);
                                 task.run();
                                 debug("End executing task.");
@@ -171,9 +174,9 @@ public class EnhancedGenerics<T extends Runnable> implements ExecutorService {
      * Submit a task as {@link Runnable}, using the default runnable conversion mapping function
      *
      * @param runnable The task to submit
-     * @throws InterruptedException
+     * @throws RejectedExecutionException In case this thread pool is {@link #stop(boolean) stopped} or queue is full.
      */
-    public void apply(final Runnable runnable) throws InterruptedException {
+    public void apply(final Runnable runnable) throws RejectedExecutionException {
         apply(runnable, defaultRunnableConverterFunction);
     }
 
@@ -182,9 +185,9 @@ public class EnhancedGenerics<T extends Runnable> implements ExecutorService {
      *
      * @param callable The task to submit
      * @return A {@link Future} representing pending completion of the task
-     * @throws InterruptedException
+     * @throws RejectedExecutionException In case this thread pool is {@link #stop(boolean) stopped} or queue is full.
      */
-    public <V> Future<V> apply(final Callable<V> callable) throws InterruptedException {
+    public <V> Future<V> apply(final Callable<V> callable) throws RejectedExecutionException {
         return apply(callable, defaultRunnableConverterFunction);
     }
 
@@ -193,10 +196,10 @@ public class EnhancedGenerics<T extends Runnable> implements ExecutorService {
      *
      * @param runnable The task to submit
      * @param runnableConverterFunction can be Null, if Null will use the default converter
-     * @throws InterruptedException
+     * @throws RejectedExecutionException In case this thread pool is {@link #stop(boolean) stopped} or queue is full.
      */
-    public void apply(final Runnable runnable, Function<Runnable, T> runnableConverterFunction) throws InterruptedException {
-        // Lock, to make sure apply() and stop() do not run in parallel.
+    public void apply(final Runnable runnable, Function<Runnable, T> runnableConverterFunction) throws RejectedExecutionException {
+        // Lock, to make sure apply() and stop() do not run in parallel. (Use read lock as we read "stop")
         // We would like to ignore any task that arrives after stop(), or in parallel to stop().
         lock.readLock().lock();
         try {
@@ -209,10 +212,14 @@ public class EnhancedGenerics<T extends Runnable> implements ExecutorService {
 
                 debug("Submitting task: " + runnable + ". Current work queue size (before submit) is " + workQueue.size());
 
-                // Use put and not offer, so we will block caller until there is space for a new task to be added.
-                workQueue.put(runnableConverterFunction.apply(runnable));
+                // I'd prefer to use put(T) here, which blocks calling thread until there is space available, and
+                // also throws InterruptedException, to follow the assignment's method declaration. Though we've agreed on
+                // using offer(T), and throw RejectedExecutionException in case there is no space available.
+                if (!workQueue.offer(runnableConverterFunction.apply(runnable))) {
+                    throw new RejectedExecutionException("Cannot submit task. Reason: Thread pool's queue is full");
+                }
             } else {
-                throw new RejectedExecutionException("Cannot submit task to a thread pool when it is stopped");
+                throw new RejectedExecutionException("Cannot submit task. Reason: Thread pool is stopped");
             }
         } finally {
             lock.readLock().unlock();
@@ -225,9 +232,9 @@ public class EnhancedGenerics<T extends Runnable> implements ExecutorService {
      * @param callable The task to submit
      * @param runnableConverterFunction can be Null, if Null will use the default converter
      * @return A {@link Future} representing pending completion of the task
-     * @throws InterruptedException
+     * @throws RejectedExecutionException In case this thread pool is {@link #stop(boolean) stopped} or queue is full.
      */
-    public <V> Future<V> apply(final Callable<V> callable, Function<Runnable, T> runnableConverterFunction) throws InterruptedException {
+    public <V> Future<V> apply(final Callable<V> callable, Function<Runnable, T> runnableConverterFunction) throws RejectedExecutionException {
         FutureTask<V> futureTask = new FutureTask<>(callable);
         apply(futureTask, runnableConverterFunction);
         return futureTask;
@@ -271,13 +278,13 @@ public class EnhancedGenerics<T extends Runnable> implements ExecutorService {
     public void stop(boolean wait) throws InterruptedException {
         // Make sure we ignore calls to stop when we have already stopped.
         if (!stop) {
-            debug("Stopping thread pool");
+            //debug("Stopping thread pool");
             lock.writeLock().lock();
             try {
                 // Exit in case two threads were arrived here simultaneously.
                 // Only one of them will perform the stop operation.
                 if (stop) {
-                    debug("Stop rejected. Thread pool is already stopped.");
+                    //debug("Stop rejected. Thread pool is already stopped.");
                     return;
                 }
 
@@ -291,10 +298,13 @@ public class EnhancedGenerics<T extends Runnable> implements ExecutorService {
 
             if (wait) {
                 // If the thread is idle, interrupt it as it means the queue is empty, and there is nothing to wait for.
-                Thread idleThread = this.idleThread;
-                if ((idleThread != null) && (!idleThread.isInterrupted())) {
-                    debug("Interrupting consumer thread as it is idle.");
-                    idleThread.interrupt();
+                // Make sure we do not interrupt the thread in case there is a task in the queue that consumer thread has not consumed yet.
+                if (workQueue.isEmpty()) {
+                    Thread idleThread = this.idleThread;
+                    if ((idleThread != null) && (!idleThread.isInterrupted())) {
+                        debug("Interrupting consumer thread as it is idle.");
+                        idleThread.interrupt();
+                    }
                 }
 
                 waitUntilDone();
@@ -308,6 +318,7 @@ public class EnhancedGenerics<T extends Runnable> implements ExecutorService {
             debug("Stop rejected. Thread pool is already stopped.");
         }
     }
+
     /**
      * This method should be invoked if wait flag for the stop method is true
      *
@@ -333,7 +344,7 @@ public class EnhancedGenerics<T extends Runnable> implements ExecutorService {
     }
 
 
-    ///////////////// Delegate ExecutorService functionality to Exercise's methods /////////////////
+    ///////////////// Delegate ExecutorService functionality to assignment's methods /////////////////
     @Override
     public void shutdown() {
         try {
@@ -354,12 +365,22 @@ public class EnhancedGenerics<T extends Runnable> implements ExecutorService {
 
     @Override
     public boolean isShutdown() {
-        return stop;
+        lock.readLock().lock();
+        try {
+            return stop;
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     @Override
     public boolean isTerminated() {
-        return stopNow;
+        lock.readLock().lock();
+        try {
+            return stopNow;
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     /**
@@ -383,36 +404,25 @@ public class EnhancedGenerics<T extends Runnable> implements ExecutorService {
     @Override
     public <V> Future<V> submit(Callable<V> task) {
         throwIfNull(task);
-        try {
-            return apply(task);
-        } catch (InterruptedException ignore) {
-            return null;
-        }
+        return apply(task);
     }
 
     @Override
     public <V> Future<V> submit(Runnable task, V result) {
         throwIfNull(task);
-        try {
-            // Convert to callable and re-use the apply method.
-            return apply(() -> {
-                task.run();
-                return result;
-            });
-        } catch (InterruptedException ignore) {
-            return null;
-        }
+
+        // Convert to callable and re-use the apply method.
+        return apply(() -> {
+            task.run();
+            return result;
+        });
     }
 
     @Override
     public Future<?> submit(Runnable task) {
         throwIfNull(task);
         FutureTask<?> future = new FutureTask<Void>(task, null);
-        try {
-            apply(future);
-        } catch (InterruptedException ignore) {
-        }
-
+        apply(future);
         return future;
     }
 
@@ -423,7 +433,19 @@ public class EnhancedGenerics<T extends Runnable> implements ExecutorService {
         List<Future<V>> futures = new ArrayList<>(tasks.size());
         if (!tasks.isEmpty()) {
             for (Callable<V> task : tasks) {
+                // Re-use the apply() method
                 futures.add(apply(task));
+            }
+        }
+
+        // According to ExecutorService interface, this method must return only after executing all
+        // tasks and having their result ready. (Meaning the tasks were complete)
+        for (Future<V> future : futures) {
+            if (!future.isDone()) {
+                try {
+                    future.get();
+                } catch (CancellationException | ExecutionException ignore) {
+                }
             }
         }
 

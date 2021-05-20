@@ -37,7 +37,7 @@ public class EnhancedGenericsMain {
         service.apply(() -> log.info("There are more than 2 design patterns in this class"));
         service.apply(() -> log.info("a runnable"));
 
-        service.apply(() -> log.info("Fun"), runnable -> new PriorityRunnable(runnable, 5));
+        service.apply(() -> log.info("Fun"), runnable -> new PriorityRunnable(runnable, 1));
 
         Callable<String> stringCallable = () -> {
             try {
@@ -48,7 +48,11 @@ public class EnhancedGenericsMain {
             return "callable string";
         };
         Future<String> futureString = service.apply(stringCallable);
-        Future<String> anotherFutureString = service.apply(stringCallable);
+
+        // I've had to set priority here, cause it seems like "BlockingQueue.offer" will put the second task before first task,
+        // and then when we call futureString.get(), we wait for 10 seconds (for the second task and first task)
+        // Though, when using "BlockingQueue.put" it works just fine.
+        Future<String> anotherFutureString = service.apply(stringCallable, runnable -> new PriorityRunnable(runnable, 2));
 
         if (IS_TESTING_PRIORITY_REORDERING) {
             // Submit some tasks with priority of 0, so they will be executed before priority 1.
