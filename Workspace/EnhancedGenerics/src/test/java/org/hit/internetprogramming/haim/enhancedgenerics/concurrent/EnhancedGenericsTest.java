@@ -71,7 +71,7 @@ public class EnhancedGenericsTest {
         service.stop(true);
     }
 
-    @Timeout(3)
+    @Timeout(4)
     @Test
     public void testService_submit1RunnableThatRunsFor2Secs_responseShouldBeArrivedWithin2Secs() throws InterruptedException {
         println("Make sure stop(true) waits for a submitted runnable to complete.");
@@ -94,7 +94,7 @@ public class EnhancedGenericsTest {
         Assertions.assertTrue(someCheck.get(), "Runnable has not ran successfully.");
     }
 
-    @Timeout(3)
+    @Timeout(4)
     @Test
     public void testService_submit1CallableThatRunsFor2Secs_responseShouldBeArrivedWithin2Secs() throws ExecutionException, InterruptedException {
         println("Make sure stop(true) waits for a submitted callable to complete.");

@@ -13,8 +13,6 @@ import java.util.Map;
  * @since 23-Apr-21
  */
 public class Graphs {
-    private static final Graphs instance = new Graphs();
-
     /**
      * Cache the graph for each client, so subsequent requests will be executed on an already initialized graph.
      */
@@ -25,7 +23,7 @@ public class Graphs {
     }
 
     public static Graphs getInstance() {
-        return instance;
+        return GraphsHolder.instance;
     }
 
     @SuppressWarnings("unchecked")
@@ -35,6 +33,10 @@ public class Graphs {
 
     public <T> void putGraph(ClientInfo clientInfo, IGraph<T> graph) {
         clientToGraph.put(clientInfo, graph);
+    }
+
+    private static final class GraphsHolder {
+        private static final Graphs instance = new Graphs();
     }
 }
 

@@ -14,6 +14,19 @@ import java.security.SecureRandom;
  */
 abstract class AbstractBinaryMatrix extends AbstractMatrix<Integer> {
     /**
+     * Constructs a new {@link AbstractBinaryMatrix}, with source values.
+     * @param from Source to get values from
+     */
+    public AbstractBinaryMatrix(int[][] from) {
+        super(from.length, from[0].length);
+        for (int row = 0; row < from.length; row++) {
+            for (int col = 0; col < from[0].length; col++) {
+                setValue(new Index(row, col), from[row][col]);
+            }
+        }
+    }
+
+    /**
      * Constructs a new and empty (all elements are 0) {@link AbstractBinaryMatrix}.
      * @param rows Amount of rows in matrix
      * @param cols Amount of columns in matrix

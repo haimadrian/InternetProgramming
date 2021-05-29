@@ -116,11 +116,11 @@ public class EnhancedGenerics<T extends Runnable> implements ExecutorService {
             () -> {
                 try {
                     debug("Consumer thread started");
-                    while ((!stop || !this.workQueue.isEmpty()) && (!stopNow)) {
+                    while ((!isShutdown() || !this.workQueue.isEmpty()) && (!isTerminated())) {
                         try {
                             // Separate take action from run action, cause the consumer thread is considered
-                            // an idle thread as long as it is waiting for task. (Blocked by the take action)
-                            // When the thread is idle, we will interrupt it event when calling shutdown, and not
+                            // an idle thread as long as it is waiting for task. (Blocked by the take() action)
+                            // When the thread is idle, we will interrupt it even when calling shutdown, and not
                             // necessarily shutdownNow. Otherwise, the idle thread might be left idle forever.
                             idleThread = Thread.currentThread();
                             T task = this.workQueue.take();
@@ -129,7 +129,7 @@ public class EnhancedGenerics<T extends Runnable> implements ExecutorService {
                             // take() is blocking, hence make sure we have not been instructed to shutdown while waiting.
                             // We cannot lock here since it would not let the shutdownNow to interrupt our thread.
                             // Note that we check stopNow only, and not "stop", because stop should wait for the task to finish.
-                            if (!stopNow) {
+                            if (!isTerminated()) {
                                 debug("Start executing task: " + task);
                                 task.run();
                                 debug("End executing task.");
@@ -201,6 +201,8 @@ public class EnhancedGenerics<T extends Runnable> implements ExecutorService {
     public void apply(final Runnable runnable, Function<Runnable, T> runnableConverterFunction) throws RejectedExecutionException {
         // Lock, to make sure apply() and stop() do not run in parallel. (Use read lock as we read "stop")
         // We would like to ignore any task that arrives after stop(), or in parallel to stop().
+        // Note that several threads can submit tasks in parallel, cause BlockingQueue is thread-safe,
+        // by design. Hence we use readLock, so all of the threads will have access.
         lock.readLock().lock();
         try {
             // After calling stop, we reject all tasks
@@ -278,13 +280,13 @@ public class EnhancedGenerics<T extends Runnable> implements ExecutorService {
     public void stop(boolean wait) throws InterruptedException {
         // Make sure we ignore calls to stop when we have already stopped.
         if (!stop) {
-            //debug("Stopping thread pool");
+            debug("Stopping thread pool");
             lock.writeLock().lock();
             try {
                 // Exit in case two threads were arrived here simultaneously.
                 // Only one of them will perform the stop operation.
                 if (stop) {
-                    //debug("Stop rejected. Thread pool is already stopped.");
+                    debug("Stop rejected. Thread pool is already stopped.");
                     return;
                 }
 
@@ -363,6 +365,9 @@ public class EnhancedGenerics<T extends Runnable> implements ExecutorService {
         return drain();
     }
 
+    /**
+     * @return Safely get the {@code stop} flag
+     */
     @Override
     public boolean isShutdown() {
         lock.readLock().lock();
@@ -373,6 +378,9 @@ public class EnhancedGenerics<T extends Runnable> implements ExecutorService {
         }
     }
 
+    /**
+     * @return Safely get the {@code stopNow} flag
+     */
     @Override
     public boolean isTerminated() {
         lock.readLock().lock();

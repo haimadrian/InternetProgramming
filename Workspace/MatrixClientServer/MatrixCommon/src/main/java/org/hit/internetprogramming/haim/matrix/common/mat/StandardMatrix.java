@@ -17,6 +17,14 @@ import java.util.List;
  */
 public class StandardMatrix extends AbstractBinaryMatrix {
     /**
+     * Constructs a new {@link StandardMatrix}, with source values.
+     * @param from Source to get values from
+     */
+    public StandardMatrix(int[][] from) {
+        super(from);
+    }
+
+    /**
      * Constructs a new and empty (all elements are 0) {@link StandardMatrix}.
      * @param rows Amount of rows in matrix
      * @param cols Amount of columns in matrix
