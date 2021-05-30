@@ -12,6 +12,17 @@ import org.hit.internetprogramming.eoh.common.mat.Index;
 import java.util.List;
 
 /**
+ * A response model is used by both server and client.<br/>
+ * Server constructs a response, based on client {@link Request}, and return this response
+ * as json string to the client. Then the client unmarshall this json string into Response model,
+ * and extract its content.<br/>
+ * A response is marked by some HTTP status, to ease response handling by client. (Whether it is a successful response or failure)<br/>
+ * A response got a body in it, e.g. message to contain the error message from server, or a graph / list of indices,
+ * depending on what a request was asking for.
+ * <pr>
+ * Use the builders of this class in order to make user code (server) cleaner.<br/>
+ * For example, you can use {@code Response res = Response.ok()} in order to construct an empty 200 OK response.
+ * </pr>
  * @author Haim Adrian
  * @since 13-Apr-21
  */
@@ -20,7 +31,8 @@ import java.util.List;
 @AllArgsConstructor
 public class Response {
     /**
-     * HTTP status code, to support OK / ERROR responses
+     * HTTP status code, to support OK / ERROR responses.
+     * @see HttpStatus
      */
     private int status;
 
@@ -41,16 +53,26 @@ public class Response {
 
     /**
      * Used to mark responses that we detect as HTTP requests, so the response can be an HTTP response.
+     * @see Request#isHttpRequest()
      */
     @JsonIgnore
     private boolean isHttpResponse;
 
+    /**
+     * Constructs a new {@link Response} model
+     * @param status {@link HttpStatus HTTP status} to mark this response as.
+     * @param message An optional message, in case of simple success, or a failure.
+     * @param value List of vertices to return using this response. (When responding to {@link ActionType#GET_NEIGHBORS} for example)
+     * @param isHttpResponse Whether this is an HTTP response or regular socket one.
+     */
     public Response(int status, String message, List<Index> value, boolean isHttpResponse) {
         this.status = status;
         this.message = message;
         this.value = value;
         this.isHttpResponse = isHttpResponse;
     }
+
+    // Builders to ease the use of this class when returning a response from server.
 
     public static Response ok() {
         return ok(HttpStatus.OK.getCode(), (List<Index>) null);

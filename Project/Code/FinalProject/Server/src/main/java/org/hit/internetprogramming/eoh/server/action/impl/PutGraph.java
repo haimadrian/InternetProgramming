@@ -6,6 +6,7 @@ import org.hit.internetprogramming.eoh.server.action.ActionContext;
 import org.hit.internetprogramming.eoh.server.impl.Graphs;
 
 /**
+ * Save a graph specified by client into our cache at {@link Graphs}.
  * @author Haim Adrian
  * @since 23-Apr-21
  */

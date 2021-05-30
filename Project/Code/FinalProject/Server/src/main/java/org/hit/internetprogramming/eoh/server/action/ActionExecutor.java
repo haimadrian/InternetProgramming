@@ -12,13 +12,16 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * A command executor (singleton) which accepts a {@link Request}, get the {@link ActionType} out of it,
+ * execute the corresponding command (e.g. {@link PutGraph} for {@link ActionType#PUT_GRAPH}, and
+ * return its response.<br/>
+ * This way it is easier for the client handler to server client requests generically, with no need
+ * to parse and figure out a request. Each individual command will do that according to its needs.
  * @author Haim Adrian
  * @since 23-Apr-21
  */
 @Log4j2
 public class ActionExecutor {
-    private static final ActionExecutor instance = new ActionExecutor();
-
     /**
      * Map each action type to implementing class, so we can initiate instances and execute actions
      */
@@ -35,8 +38,11 @@ public class ActionExecutor {
         actions.put(ActionType.PRINT_GRAPH, PrintGraph.class);
     }
 
+    /**
+     * @return The unique instance of this class
+     */
     public static ActionExecutor getInstance() {
-        return instance;
+        return ActionExecutorHolder.instance;
     }
 
     /**
@@ -61,6 +67,11 @@ public class ActionExecutor {
         }
 
         return response;
+    }
+
+    // A lazy, thread-safe initializer for the unique instance of our singleton.
+    private static final class ActionExecutorHolder {
+        private static final ActionExecutor instance = new ActionExecutor();
     }
 }
 

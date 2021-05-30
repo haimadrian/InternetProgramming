@@ -9,6 +9,7 @@ import org.hit.internetprogramming.eoh.server.action.ActionContext;
 import org.hit.internetprogramming.eoh.server.impl.Graphs;
 
 /**
+ * Print the graph cached for the requesting client to log, and return that string to client.
  * @author Haim Adrian
  * @since 23-Apr-21
  */

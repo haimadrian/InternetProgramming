@@ -60,6 +60,15 @@ abstract class AbstractBinaryMatrix extends AbstractMatrix<Integer> {
         }
     }
 
+    @Override
+    public void setValue(Index index, Integer value) {
+        if ((value == null) || ((value != 0) && (value != 1))) {
+            throw new IllegalArgumentException("A binary matrix accepts 0 or 1 only! Was: " + value);
+        }
+
+        super.setValue(index, value);
+    }
+
     /**
      * For binary matrix, we treat the value 1 as an existing value. null and 0 are considered as non-existing
      * @param index The index to check if there is value at

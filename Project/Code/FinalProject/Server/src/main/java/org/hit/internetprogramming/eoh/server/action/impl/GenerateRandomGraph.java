@@ -14,6 +14,8 @@ import org.hit.internetprogramming.eoh.server.action.ActionExecutor;
 import org.hit.internetprogramming.eoh.server.impl.Graphs;
 
 /**
+ * A command that generates a new random graph for the requesting client.<br/>
+ * The graph is cached at {@link Graphs} so the requesting client can later get/print it.
  * @author Haim Adrian
  * @since 23-Apr-21
  */

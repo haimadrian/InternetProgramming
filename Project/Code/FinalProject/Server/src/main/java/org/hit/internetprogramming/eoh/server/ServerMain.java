@@ -11,12 +11,20 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
+ * Main class of the server.<br/>
+ * The server is using {@link TCPServer} for listening to clients and server their requests.<br/>
+ * As the {@link TCPServer} is generic, we use {@link MatrixClientHandler} in order to handle operational sockets
+ * as input stream and output stream, letting the TCPServer class manage most of the work for us.<br/>
+ * The server also uses {@link TrayIcon}, in case we are running in a Desktop environment, so we can
+ * find the server icon at the tray icon list, right click it and stop the server by selecting "Exit" option.
  * @author Haim Adrian
  * @since 23-Apr-21
  */
-public class MatrixServerMain {
+public class ServerMain {
+    // Used for redirecting System.out and System.in to Log4j2.
     private static final String STDOUT_LOGGER_NAME = "stdout";
     private static final String STDERR_LOGGER_NAME = "stderr";
     public static final String MATRIX_SERVER = "Graph Server";
@@ -24,15 +32,26 @@ public class MatrixServerMain {
     private Logger log;
     private TrayIcon trayIcon;
     private TCPServer server;
-    private boolean wasShutDown = false;
+
+    /**
+     * A flag that we use in order to mark that the server shutdown method has been invoked.<br/>
+     * The flag is atomic as we call {@link #shutdown()} from a JVM shutdown handler, but also from
+     * the tray icon's popup menu, when we instruct the server to shutdown ordinary. As a result, we would like
+     * to avoid a situation where the shutdown method runs twice.
+     */
+    private final AtomicBoolean wasShutDown = new AtomicBoolean(false);
 
     public static void main(String[] args) {
         configureLog4j2();
         redirectStreamsToLog4j();
 
-        new MatrixServerMain().run();
+        new ServerMain().run();
     }
 
+    /**
+     * Configure Log4j2 to use async loggers by default for all loggers, in order to avoid of making
+     * log calls affecting performance. (Instead of waiting for IO, the code continues and the IO occurs in background)
+     */
     private static void configureLog4j2() {
         // Use asynchronous loggers by default for better performance
         System.setProperty("log4j2.contextSelector", "org.apache.logging.log4j.core.async.AsyncLoggerContextSelector");
@@ -43,6 +62,9 @@ public class MatrixServerMain {
         System.setProperty("log4j2.DiscardThreshold", "DEBUG");
     }
 
+    /**
+     * Redirect System.out and System.in to Log4j2.
+     */
     private static void redirectStreamsToLog4j() {
         System.setOut(new PrintStream(new LoggingStream(STDOUT_LOGGER_NAME), true));
         System.setErr(new PrintStream(new LoggingStream(STDERR_LOGGER_NAME), true));
@@ -56,8 +78,11 @@ public class MatrixServerMain {
             " (build " + System.getProperty("java.vm.version") + ", " + System.getProperty("java.vm.info") + ")";
     }
 
+    /**
+     * Here we actually start the TCPServer.
+     */
     private void run() {
-        log = LogManager.getLogger(MatrixServerMain.class);
+        log = LogManager.getLogger(ServerMain.class);
 
         server = new TCPServer(1234, 0, 10, new MatrixClientHandler());
         server.start();
@@ -66,9 +91,11 @@ public class MatrixServerMain {
         Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown, "ServerShutdownThread"));
     }
 
+    /**
+     * Ordinary shutdown TCPServer and Log4j.
+     */
     private void shutdown() {
-        if (!wasShutDown) {
-            wasShutDown = true;
+        if (!wasShutDown.getAndSet(true)) {
             log.info("Shutting down InternetProgramming server");
             server.stop();
 
@@ -107,6 +134,9 @@ public class MatrixServerMain {
         }
     }
 
+    /**
+     * Some Look & Feel for Swing. (For tray icon's popup menu)
+     */
     private void tweakPLAF() {
         // Set up Look & Feel to default for current OS
 

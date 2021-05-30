@@ -11,6 +11,7 @@ import org.hit.internetprogramming.eoh.server.action.ActionContext;
 import org.hit.internetprogramming.eoh.server.impl.Graphs;
 
 /**
+ * A command to fetch the requesting client's graph from {@link Graphs} cache.
  * @author Haim Adrian
  * @since 23-Apr-21
  */

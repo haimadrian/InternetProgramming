@@ -3,7 +3,7 @@ package org.hit.internetprogramming.eoh.server.action;
 import org.hit.internetprogramming.eoh.common.comms.Response;
 
 /**
- * Main interface for actions in MatrixServer
+ * Main interface for actions in the server
  * @author Haim Adrian
  * @since 23-Apr-21
  */

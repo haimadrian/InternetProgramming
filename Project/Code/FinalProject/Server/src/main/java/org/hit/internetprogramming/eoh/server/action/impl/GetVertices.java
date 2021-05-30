@@ -12,6 +12,10 @@ import org.hit.internetprogramming.eoh.server.impl.Graphs;
 import java.util.List;
 
 /**
+ * A command that returns requested vertices to client, based on a request.<br/>
+ * When client asks for neighbors, we return the neighbors of the specified vertex, from the graph cached
+ * for the requesting client at {@link Graphs}.<br/>
+ * When client asks for reachable neighbors, then we will collect and return them.
  * @author Haim Adrian
  * @since 23-Apr-21
  */

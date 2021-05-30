@@ -30,7 +30,7 @@ import java.util.Scanner;
  * @author Haim Adrian
  * @since 23-Apr-21
  */
-public class MatrixClientMain {
+public class ClientMain {
     private static final String STDOUT_LOGGER_NAME = "stdout";
     private static final String STDERR_LOGGER_NAME = "stderr";
 
@@ -39,7 +39,7 @@ public class MatrixClientMain {
     public static void main(String[] args) {
         redirectStreamsToLog4j();
 
-        new MatrixClientMain().run();
+        new ClientMain().run();
     }
 
     private static void redirectStreamsToLog4j() {
@@ -56,7 +56,7 @@ public class MatrixClientMain {
     }
 
     private void run() {
-        log = LogManager.getLogger(MatrixClientMain.class);
+        log = LogManager.getLogger(ClientMain.class);
 
         log.info("Graph Client");
         try (Scanner scanner = new Scanner(System.in)) {

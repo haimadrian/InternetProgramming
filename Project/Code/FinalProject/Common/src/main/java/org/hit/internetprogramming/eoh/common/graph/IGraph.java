@@ -4,14 +4,13 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.hit.internetprogramming.eoh.common.mat.IMatrix;
 
-import java.util.Collection;
 import java.util.List;
 
 /**
  * This interface is the primary data type for Graph hierarchy<br/>
  * It represents the basic functionality required from a traversable graph.
  * @param <T> The type of elements in the graph
- * @author Haim Adrian
+ * @author Nathan Dillbary, Haim Adrian
  * @since 06-Mar-21
  * @see IMatrix
  */
@@ -39,10 +38,9 @@ public interface IGraph<T> {
     * If you want to get all adjacent vertices, use {@link #getAdjacentVertices(Object)}<br/>
     * <b>Note:</b> If specified vertex does not have value in it, the result is an empty list. Nothing is reachable from nowhere.
     * @param vertex The vertex to get its reachable vertices
-    * @return All reachable vertices of the specified vertex
+    * @return All reachable vertices from the specified vertex
     */
    List<T> getReachableVertices(T vertex);
-   Collection<Collection<T>> findPaths(T from, T to);
 
    /**
     * Get a string representing this graph.<br/>

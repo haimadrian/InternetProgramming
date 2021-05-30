@@ -22,19 +22,37 @@ public class Graphs {
         clientToGraph = new HashMap<>();
     }
 
+    /**
+     * @return The unique instance of this class
+     */
     public static Graphs getInstance() {
         return GraphsHolder.instance;
     }
 
+    /**
+     * Get a graph from cache, or {@code null} in case there is no graph cached for the specified client.<br/>
+     * A client must first {@link org.hit.internetprogramming.eoh.server.action.impl.PutGraph} before it can
+     * execute commands on graphs.
+     * @param clientInfo The client info to get its cached graph
+     * @param <T> Type of elements in {@link IGraph}
+     * @return The graph, in case there is one, or {@code null} otherwise.
+     */
     @SuppressWarnings("unchecked")
     public <T> IGraph<T> getGraph(ClientInfo clientInfo) {
         return (IGraph<T>) clientToGraph.get(clientInfo);
     }
 
+    /**
+     * Put a graph into the cache, mapped to the specified client info.
+     * @param clientInfo The client info to map the specified graph to
+     * @param graph The graph to put into the cache
+     * @param <T> Type of elements in {@link IGraph}
+     */
     public <T> void putGraph(ClientInfo clientInfo, IGraph<T> graph) {
         clientToGraph.put(clientInfo, graph);
     }
 
+    // A lazy, thread-safe initializer for the unique instance of our singleton.
     private static final class GraphsHolder {
         private static final Graphs instance = new Graphs();
     }
