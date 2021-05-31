@@ -37,30 +37,30 @@ public class DFSVisit<T> {
      */
     public List<T> traverse(IGraph<T> graph) {
         Deque<T> workingStack = this.workingStack.get();
-        Set<T> visitedNodes = this.visitedVertices.get();
+        Set<T> visitedVertices = this.visitedVertices.get();
 
         workingStack.clear();
-        visitedNodes.clear();
+        visitedVertices.clear();
 
-        T currNode = graph.getRoot();
-        workingStack.push(currNode);
-        visitedNodes.add(currNode);
+        T currVertex = graph.getRoot();
+        workingStack.push(currVertex);
+        visitedVertices.add(currVertex);
 
         // As long as we haven't reached nowhere (We scanned all reachable vertices)
         while (!workingStack.isEmpty()) {
-            currNode = workingStack.pop();
-            Collection<T> reachableVertices = graph.getReachableVertices(currNode);
+            currVertex = workingStack.pop();
+            Collection<T> reachableVertices = graph.getReachableVertices(currVertex);
 
-            reachableVertices.forEach(node -> {
+            reachableVertices.forEach(vertex -> {
                 // Ensure we push each vertex once, to avoid a situation where we push
                 // a vertex, and then push its neighbors, although they are already in the stack.
-                if (!visitedNodes.contains(node)) {
-                    visitedNodes.add(node);
-                    workingStack.push(node);
+                if (!visitedVertices.contains(vertex)) {
+                    visitedVertices.add(vertex);
+                    workingStack.push(vertex);
                 }
             });
         }
 
-        return new ArrayList<>(visitedNodes);
+        return new ArrayList<>(visitedVertices);
     }
 }
