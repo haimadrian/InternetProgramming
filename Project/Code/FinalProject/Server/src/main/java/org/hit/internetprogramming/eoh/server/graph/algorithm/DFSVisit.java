@@ -18,7 +18,7 @@ import java.util.*;
  */
 public class DFSVisit<T> {
     protected final ThreadLocal<Deque<T>> workingStack = ThreadLocal.withInitial(ArrayDeque::new);
-    protected final ThreadLocal<Set<T>> visitedVertices = ThreadLocal.withInitial(HashSet::new);
+    protected final ThreadLocal<Set<T>> visitedVertices = ThreadLocal.withInitial(LinkedHashSet::new);
 
     /**
      * Algorithm:<br/>
