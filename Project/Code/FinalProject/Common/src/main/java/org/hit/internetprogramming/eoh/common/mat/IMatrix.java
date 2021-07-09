@@ -19,7 +19,8 @@ import java.util.List;
 // Store type info to json, so we can ease serialization / deserialization
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "_type")
 @JsonSubTypes({ @JsonSubTypes.Type(value = StandardMatrix.class, name = "standardBinaryMatrix"),
-    @JsonSubTypes.Type(value = CrossMatrix.class, name = "crossBinaryMatrix") })
+    @JsonSubTypes.Type(value = CrossMatrix.class, name = "crossBinaryMatrix"),
+    @JsonSubTypes.Type(value = RegularMatrix.class, name = "regularBinaryMatrix") })
 public interface IMatrix<T> {
     /**
      * Checks if there is a value at the specified index.

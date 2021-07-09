@@ -12,10 +12,7 @@ import org.hit.internetprogramming.eoh.common.comms.Response;
 import org.hit.internetprogramming.eoh.common.graph.IGraph;
 import org.hit.internetprogramming.eoh.common.graph.MatrixGraphAdapter;
 import org.hit.internetprogramming.eoh.common.log.LoggingStream;
-import org.hit.internetprogramming.eoh.common.mat.CrossMatrix;
-import org.hit.internetprogramming.eoh.common.mat.IMatrix;
-import org.hit.internetprogramming.eoh.common.mat.Index;
-import org.hit.internetprogramming.eoh.common.mat.StandardMatrix;
+import org.hit.internetprogramming.eoh.common.mat.*;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -86,6 +83,10 @@ public class ClientMain {
                         executeIndexedAction(scanner, "Please enter index in tuple format. e.g. (1, 1)", choice.getActionType(), false);
                         break;
                     }
+                    case CONNECTED_COMPONENTS:{
+                        executeRequest(new Request(ActionType.CONNECTED_COMPONENTS), false);
+                        break;
+                    }
                     case PRINT_GRAPH: {
                         executeRequest(new Request(ActionType.PRINT_GRAPH), true);
                         break;
@@ -145,10 +146,9 @@ public class ClientMain {
 
     private void createNewGraph(Scanner scanner) {
         Index dimension = readIndex(scanner, "Enter matrix dimension. e.g. (3, 3)");
-        log.info("Enter matrix kind (1=Standard, 2=Cross)");
-        int matrixKind = readChoice(scanner, 1, 2);
-
-        IMatrix<Integer> matrix = matrixKind == 1 ? new StandardMatrix(dimension.getRow(), dimension.getColumn()) : new CrossMatrix(dimension.getRow(), dimension.getColumn());
+        log.info("Enter matrix kind (1=Standard, 2=Cross , 3=Regular)");
+        int matrixKind = readChoice(scanner, 1, MatrixType.values().length);
+        IMatrix<Integer> matrix = MatrixType.values()[matrixKind - 1].newInstance(dimension.getRow(), dimension.getColumn());
 
         log.info("Enter matrix values, row by row. You have to enter 0 or 1 only, and you have chosen to create a matrix with " + (dimension.getRow() * dimension.getColumn()) + " elements");
         for (int i = 0; i < dimension.getRow(); i++) {

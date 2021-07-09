@@ -19,6 +19,7 @@ public enum MenuAction {
     GENERATE_RANDOM_GRAPH_CROSS("Generate Random Graph (Using cross matrix)", ActionType.GENERATE_RANDOM_GRAPH_CROSS),
     GET_NEIGHBORS("Get Neighbor Vertices", ActionType.GET_NEIGHBORS),
     GET_REACHABLES("Get Reachable Vertices", ActionType.GET_REACHABLES),
+    CONNECTED_COMPONENTS("Get connected components ", ActionType.CONNECTED_COMPONENTS),
     PRINT_GRAPH("Print Graph", ActionType.PRINT_GRAPH);
 
     /**

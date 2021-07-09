@@ -15,7 +15,7 @@ import java.util.List;
  * @see AbstractBinaryMatrix
  * @see CrossMatrix
  */
-public class StandardMatrix extends AbstractBinaryMatrix {
+public class StandardMatrix extends AbstractBinaryMatrix implements IStandardMatrix<Integer> {
     /**
      * Constructs a new {@link StandardMatrix}, with source values.
      * @param from Source to get values from
@@ -42,37 +42,6 @@ public class StandardMatrix extends AbstractBinaryMatrix {
      */
     public StandardMatrix(int rows, int cols, boolean isRandom) {
         super(rows, cols, isRandom);
-    }
-
-    @Override
-    public List<Index> neighbors(Index index) {
-        List<Index> neighbors = new ArrayList<>();
-
-        // Instead of falling into potential exceptions, which might affect the performance,
-        // just validate bounds.
-        if (isIndexValid(index)) {
-            // Top
-            if (index.getRow() > 0) {
-                neighbors.add(new Index(index.getRow() - 1, index.getColumn()));
-            }
-
-            // Bottom
-            if (index.getRow() < (rows() - 1)) {
-                neighbors.add(new Index(index.getRow() + 1, index.getColumn()));
-            }
-
-            // Left
-            if (index.getColumn() > 0) {
-                neighbors.add(new Index(index.getRow(), index.getColumn() - 1));
-            }
-
-            // Right
-            if (index.getColumn() < (cols() - 1)) {
-                neighbors.add(new Index(index.getRow(), index.getColumn() + 1));
-            }
-        }
-
-        return neighbors;
     }
 }
 
