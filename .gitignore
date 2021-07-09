@@ -91,3 +91,4 @@ gradlew.bat
 gradle/
 
 *.json
+lombok.config
