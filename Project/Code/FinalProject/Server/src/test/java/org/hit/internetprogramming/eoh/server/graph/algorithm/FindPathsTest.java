@@ -7,12 +7,23 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Test class for {@link FindPaths} algorithm.
  * @author Haim Adrian
  */
 public class FindPathsTest {
+
+    private static void pathsValidation(Collection<? extends Collection<Index>> expectedPaths, Collection<Collection<Index>> actualPaths) {
+        Assertions.assertEquals(expectedPaths.size(), actualPaths.size(), "Wrong amount of paths");
+        for (Collection<Index> expectedPath : expectedPaths) {
+            Assertions.assertTrue(actualPaths.contains(expectedPath), "Missing path: " + System.lineSeparator() +
+                    expectedPath + System.lineSeparator() +
+                    "Paths: " + System.lineSeparator() +
+                    actualPaths.stream().map(Collection::toString).collect(Collectors.joining(System.lineSeparator())));
+        }
+    }
 
     /* ************************************************************************************** */
     /* *************************** Tests for Find Shortest Paths **************************** */
@@ -31,12 +42,14 @@ public class FindPathsTest {
         IMatrix<Integer> matrix = new StandardMatrix(mat);
         IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(0, 0));
 
+        List<List<Index>> expectedPaths = new ArrayList<>(0);
+
         // Act
         FindPaths<Index> findPaths = new FindPaths<>(graph);
         Collection<Collection<Index>> paths = findPaths.findShortestPaths(Index.from(2, 2));
 
         // Assert
-        Assertions.assertEquals(0, paths.size());
+        pathsValidation(expectedPaths, paths);
     }
 
     @Test
@@ -51,12 +64,36 @@ public class FindPathsTest {
         IMatrix<Integer> matrix = new CrossMatrix(mat);
         IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(0, 0));
 
+        List<List<Index>> expectedPaths = new ArrayList<>(0);
+
         // Act
         FindPaths<Index> findPaths = new FindPaths<>(graph);
         Collection<Collection<Index>> paths = findPaths.findShortestPaths(Index.from(3, 3));
 
         // Assert
-        Assertions.assertEquals(0, paths.size());
+        pathsValidation(expectedPaths, paths);
+    }
+
+    @Test
+    public void testFindShortestPaths_useRegularMatrix_findNoPath() {
+        // Arrange
+        //@formatter:off
+        int[][] mat = {{1, 1, 1, 1},
+                       {1, 1, 0, 1},
+                       {1, 1, 0, 0},
+                       {1, 1, 0, 1}};
+        //@formatter:on
+        IMatrix<Integer> matrix = new RegularMatrix(mat);
+        IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(0, 0));
+
+        List<List<Index>> expectedPaths = new ArrayList<>(0);
+
+        // Act
+        FindPaths<Index> findPaths = new FindPaths<>(graph);
+        Collection<Collection<Index>> paths = findPaths.findShortestPaths(Index.from(3, 3));
+
+        // Assert
+        pathsValidation(expectedPaths, paths);
     }
 
     @Test
@@ -72,30 +109,15 @@ public class FindPathsTest {
         IMatrix<Integer> matrix = new StandardMatrix(mat);
         IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(0, 0));
 
-        List<Index> expectedPath = new LinkedList<>();
-        expectedPath.add(Index.from(0, 0));
-        expectedPath.add(Index.from(1, 0));
-        expectedPath.add(Index.from(2, 0));
-        expectedPath.add(Index.from(3, 0));
-        expectedPath.add(Index.from(4, 0));
-        expectedPath.add(Index.from(4, 1));
-        expectedPath.add(Index.from(4, 2));
-        expectedPath.add(Index.from(3, 2));
-        expectedPath.add(Index.from(2, 2));
+        Collection<Collection<Index>> expectedPaths = new ArrayList<>(1);
+        expectedPaths.add(Arrays.asList(Index.from(0, 0), Index.from(1, 0), Index.from(2, 0), Index.from(3, 0), Index.from(4, 0), Index.from(4, 1), Index.from(4, 2), Index.from(3, 2), Index.from(2, 2)));
 
         // Act
         FindPaths<Index> findPaths = new FindPaths<>(graph);
         List<Collection<Index>> paths = findPaths.findShortestPaths(Index.from(2, 2));
 
         // Assert
-        Assertions.assertEquals(1, paths.size());
-        Assertions.assertEquals(expectedPath.size(), paths.get(0).size(), "Actual path length is not expected");
-
-        Iterator<Index> expectedIterator = expectedPath.listIterator();
-        for (Index currVertex : paths.get(0)) {
-            Index currExpectedVertex = expectedIterator.next();
-            Assertions.assertEquals(currExpectedVertex, currVertex, "Actual path is not ordered accordingly");
-        }
+        pathsValidation(expectedPaths, paths);
     }
 
     @Test
@@ -111,25 +133,39 @@ public class FindPathsTest {
         IMatrix<Integer> matrix = new CrossMatrix(mat);
         IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(0, 0));
 
-        List<Index> expectedPath = new LinkedList<>();
-        expectedPath.add(Index.from(0, 0));
-        expectedPath.add(Index.from(1, 1));
-        expectedPath.add(Index.from(2, 2));
-        expectedPath.add(Index.from(3, 3));
+        Collection<Collection<Index>> expectedPaths = new ArrayList<>(1);
+        expectedPaths.add(Arrays.asList(Index.from(0, 0), Index.from(1, 1), Index.from(2, 2), Index.from(3, 3)));
 
         // Act
         FindPaths<Index> findPaths = new FindPaths<>(graph);
         List<Collection<Index>> paths = findPaths.findShortestPaths(Index.from(3, 3));
 
         // Assert
-        Assertions.assertEquals(1, paths.size());
-        Assertions.assertEquals(expectedPath.size(), paths.get(0).size(), "Actual path length is not expected");
+        pathsValidation(expectedPaths, paths);
+    }
 
-        Iterator<Index> expectedIterator = expectedPath.listIterator();
-        for (Index currVertex : paths.get(0)) {
-            Index currExpectedVertex = expectedIterator.next();
-            Assertions.assertEquals(currExpectedVertex, currVertex, "Actual path is not ordered accordingly");
-        }
+    @Test
+    public void testFindShortestPaths_useRegularMatrix_findOnePath() {
+        // Arrange
+        //@formatter:off
+        int[][] mat = {{1, 1, 1, 1, 0},
+                       {1, 0, 0, 0, 1},
+                       {1, 0, 1, 0, 1},
+                       {1, 0, 1, 0, 1},
+                       {1, 1, 1, 1, 1}};
+        //@formatter:on
+        IMatrix<Integer> matrix = new RegularMatrix(mat);
+        IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(0, 0));
+
+        Collection<Collection<Index>> expectedPaths = new ArrayList<>(1);
+        expectedPaths.add(Arrays.asList(Index.from(0, 0), Index.from(1, 0), Index.from(2, 0), Index.from(3, 0), Index.from(4, 1), Index.from(3, 2), Index.from(2, 2)));
+
+        // Act
+        FindPaths<Index> findPaths = new FindPaths<>(graph);
+        List<Collection<Index>> paths = findPaths.findShortestPaths(Index.from(2, 2));
+
+        // Assert
+        pathsValidation(expectedPaths, paths);
     }
 
     @Test
@@ -145,12 +181,16 @@ public class FindPathsTest {
         IMatrix<Integer> matrix = new StandardMatrix(mat);
         IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(0, 0));
 
+        List<List<Index>> expectedPaths = new ArrayList<>(2);
+        expectedPaths.add(Arrays.asList(Index.from(0, 0), Index.from(0, 1), Index.from(0, 2), Index.from(1, 2), Index.from(2, 2)));
+        expectedPaths.add(Arrays.asList(Index.from(0, 0), Index.from(1, 0), Index.from(2, 0), Index.from(2, 1), Index.from(2, 2)));
+
         // Act
         FindPaths<Index> findPaths = new FindPaths<>(graph);
         Collection<Collection<Index>> paths = findPaths.findShortestPaths(Index.from(2, 2));
 
         // Assert
-        Assertions.assertEquals(2, paths.size());
+        pathsValidation(expectedPaths, paths);
     }
 
     @Test
@@ -167,12 +207,15 @@ public class FindPathsTest {
         IMatrix<Integer> matrix = new CrossMatrix(mat);
         IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(0, 0));
 
+        List<List<Index>> expectedPaths = new ArrayList<>(2);
+        expectedPaths.add(Arrays.asList(Index.from(0, 0), Index.from(1, 1), Index.from(0, 2), Index.from(1, 3), Index.from(2, 4), Index.from(3, 3)));
+        expectedPaths.add(Arrays.asList(Index.from(0, 0), Index.from(1, 1), Index.from(2, 0), Index.from(3, 1), Index.from(4, 2), Index.from(3, 3)));
         // Act
         FindPaths<Index> findPaths = new FindPaths<>(graph);
         Collection<Collection<Index>> paths = findPaths.findShortestPaths(Index.from(3, 3));
 
         // Assert
-        Assertions.assertEquals(2, paths.size());
+        pathsValidation(expectedPaths, paths);
     }
 
     @Test
@@ -188,12 +231,15 @@ public class FindPathsTest {
         IMatrix<Integer> matrix = new StandardMatrix(mat);
         IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(1, 2));
 
+        List<List<Index>> expectedPaths = new ArrayList<>(1);
+        expectedPaths.add(Arrays.asList(Index.from(1, 2), Index.from(1, 1), Index.from(1, 0), Index.from(2, 0), Index.from(3, 0), Index.from(4, 0), Index.from(4, 1), Index.from(4, 2), Index.from(3, 2)));
+
         // Act
         FindPaths<Index> findPaths = new FindPaths<>(graph);
         Collection<Collection<Index>> paths = findPaths.findShortestPaths(Index.from(3, 2));
 
         // Assert
-        Assertions.assertEquals(1, paths.size());
+        pathsValidation(expectedPaths, paths);
     }
 
     @Test
@@ -209,12 +255,15 @@ public class FindPathsTest {
         IMatrix<Integer> matrix = new CrossMatrix(mat);
         IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(1, 2));
 
+        List<List<Index>> expectedPaths = new ArrayList<>(1);
+        expectedPaths.add(Arrays.asList(Index.from(1, 2), Index.from(2, 1), Index.from(3, 2), Index.from(4, 3)));
+
         // Act
         FindPaths<Index> findPaths = new FindPaths<>(graph);
         Collection<Collection<Index>> paths = findPaths.findShortestPaths(Index.from(4, 3));
 
         // Assert
-        Assertions.assertEquals(1, paths.size());
+        pathsValidation(expectedPaths, paths);
     }
 
     @Test
@@ -230,12 +279,15 @@ public class FindPathsTest {
         IMatrix<Integer> matrix = new StandardMatrix(mat);
         IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(1, 2));
 
+        List<List<Index>> expectedPaths = new ArrayList<>(1);
+        expectedPaths.add(Arrays.asList(Index.from(1, 2), Index.from(2, 2)));
+
         // Act
         FindPaths<Index> findPaths = new FindPaths<>(graph);
         Collection<Collection<Index>> paths = findPaths.findShortestPaths(Index.from(2, 2));
 
         // Assert
-        Assertions.assertEquals(1, paths.size());
+        pathsValidation(expectedPaths, paths);
     }
 
     @Test
@@ -250,12 +302,15 @@ public class FindPathsTest {
         IMatrix<Integer> matrix = new CrossMatrix(mat);
         IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(1, 3));
 
+        List<List<Index>> expectedPaths = new ArrayList<>(1);
+        expectedPaths.add(Arrays.asList(Index.from(1, 3), Index.from(2, 2)));
+
         // Act
         FindPaths<Index> findPaths = new FindPaths<>(graph);
         Collection<Collection<Index>> paths = findPaths.findShortestPaths(Index.from(2, 2));
 
         // Assert
-        Assertions.assertEquals(1, paths.size());
+        pathsValidation(expectedPaths, paths);
     }
 
     @Test
@@ -289,10 +344,7 @@ public class FindPathsTest {
         Collection<Collection<Index>> paths = findPaths.findShortestPaths(Index.from(8, 3));
 
         // Assert
-        Assertions.assertEquals(6, paths.size());
-        for (List<Index> expectedPath : expectedPaths) {
-            Assertions.assertTrue(paths.contains(expectedPath), "Missing path: " + expectedPath);
-        }
+        pathsValidation(expectedPaths, paths);
     }
 
     @Test
@@ -313,7 +365,7 @@ public class FindPathsTest {
         IMatrix<Integer> matrix = new RegularMatrix(mat);
         IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(3, 1));
 
-        List<List<Index>> expectedPaths = new ArrayList<>(3);
+        Collection<List<Index>> expectedPaths = new ArrayList<>(3);
         expectedPaths.add(new LinkedList<>(Arrays.asList(Index.from(3, 1), Index.from(3, 2), Index.from(3, 3), Index.from(4, 4), Index.from(5, 5), Index.from(6, 6), Index.from(7, 5), Index.from(7, 4), Index.from(8, 3))));
         expectedPaths.add(new LinkedList<>(Arrays.asList(Index.from(3, 1), Index.from(3, 2), Index.from(4, 3), Index.from(4, 4), Index.from(5, 5), Index.from(6, 6), Index.from(7, 5), Index.from(7, 4), Index.from(8, 3))));
         expectedPaths.add(new LinkedList<>(Arrays.asList(Index.from(3, 1), Index.from(3, 2), Index.from(4, 3), Index.from(5, 4), Index.from(5, 5), Index.from(6, 6), Index.from(7, 5), Index.from(7, 4), Index.from(8, 3))));
@@ -323,10 +375,7 @@ public class FindPathsTest {
         Collection<Collection<Index>> paths = findPaths.findShortestPaths(Index.from(8, 3));
 
         // Assert
-        Assertions.assertEquals(3, paths.size());
-        for (List<Index> expectedPath : expectedPaths) {
-            Assertions.assertTrue(paths.contains(expectedPath), "Missing path: " + expectedPath);
-        }
+        pathsValidation(expectedPaths, paths);
     }
 
     /* ************************************************************************************** */
@@ -346,12 +395,14 @@ public class FindPathsTest {
         IMatrix<Integer> matrix = new StandardMatrix(mat);
         IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(0, 0));
 
+        List<List<Index>> expectedPaths = new ArrayList<>();
+
         // Act
         FindPaths<Index> findPaths = new FindPaths<>(graph);
         Collection<Collection<Index>> paths = findPaths.findAllPaths(Index.from(2, 2));
 
         // Assert
-        Assertions.assertEquals(0, paths.size());
+        pathsValidation(expectedPaths, paths);
     }
 
     @Test
@@ -366,12 +417,14 @@ public class FindPathsTest {
         IMatrix<Integer> matrix = new CrossMatrix(mat);
         IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(0, 0));
 
+        List<List<Index>> expectedPaths = new ArrayList<>(0);
+
         // Act
         FindPaths<Index> findPaths = new FindPaths<>(graph);
         Collection<Collection<Index>> paths = findPaths.findAllPaths(Index.from(3, 3));
 
         // Assert
-        Assertions.assertEquals(0, paths.size());
+        pathsValidation(expectedPaths, paths);
     }
 
     @Test
@@ -387,12 +440,15 @@ public class FindPathsTest {
         IMatrix<Integer> matrix = new StandardMatrix(mat);
         IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(0, 0));
 
+        Collection<Collection<Index>> expectedPaths = new ArrayList<>(1);
+        expectedPaths.add(Arrays.asList(Index.from(0, 0), Index.from(1, 0), Index.from(2, 0), Index.from(3, 0), Index.from(4, 0), Index.from(4, 1), Index.from(4, 2), Index.from(3, 2), Index.from(2, 2)));
+
         // Act
         FindPaths<Index> findPaths = new FindPaths<>(graph);
         Collection<Collection<Index>> paths = findPaths.findAllPaths(Index.from(2, 2));
 
         // Assert
-        Assertions.assertEquals(1, paths.size());
+        pathsValidation(expectedPaths, paths);
     }
 
     @Test
@@ -408,12 +464,15 @@ public class FindPathsTest {
         IMatrix<Integer> matrix = new CrossMatrix(mat);
         IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(0, 0));
 
+        Collection<Collection<Index>> expectedPaths = new ArrayList<>(1);
+        expectedPaths.add(Arrays.asList(Index.from(0, 0), Index.from(1, 1), Index.from(2, 2), Index.from(3, 3)));
+
         // Act
         FindPaths<Index> findPaths = new FindPaths<>(graph);
         Collection<Collection<Index>> paths = findPaths.findAllPaths(Index.from(3, 3));
 
         // Assert
-        Assertions.assertEquals(1, paths.size());
+        pathsValidation(expectedPaths, paths);
     }
 
     @Test
@@ -429,12 +488,17 @@ public class FindPathsTest {
         IMatrix<Integer> matrix = new StandardMatrix(mat);
         IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(0, 0));
 
+        List<List<Index>> expectedPaths = new ArrayList<>(3);
+        expectedPaths.add(Arrays.asList(Index.from(0, 0), Index.from(0, 1), Index.from(0, 2), Index.from(1, 2), Index.from(2, 2)));
+        expectedPaths.add(Arrays.asList(Index.from(0, 0), Index.from(1, 0), Index.from(2, 0), Index.from(2, 1), Index.from(2, 2)));
+        expectedPaths.add(Arrays.asList(Index.from(0, 0), Index.from(1, 0), Index.from(2, 0), Index.from(3, 0), Index.from(4, 0), Index.from(4, 1), Index.from(4, 2), Index.from(3, 2), Index.from(2, 2)));
+
         // Act
         FindPaths<Index> findPaths = new FindPaths<>(graph);
         Collection<Collection<Index>> paths = findPaths.findAllPaths(Index.from(2, 2));
 
         // Assert
-        Assertions.assertEquals(3, paths.size());
+        pathsValidation(expectedPaths, paths);
     }
 
     @Test
@@ -449,12 +513,17 @@ public class FindPathsTest {
         IMatrix<Integer> matrix = new CrossMatrix(mat);
         IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(0, 0));
 
+        List<List<Index>> expectedPaths = new ArrayList<>(3);
+        expectedPaths.add(Arrays.asList(Index.from(0, 0), Index.from(1, 1), Index.from(2, 2)));
+        expectedPaths.add(Arrays.asList(Index.from(0, 0), Index.from(1, 1), Index.from(2, 0), Index.from(3, 1), Index.from(2, 2)));
+        expectedPaths.add(Arrays.asList(Index.from(0, 0), Index.from(1, 1), Index.from(0, 2), Index.from(1, 3), Index.from(2, 2)));
+
         // Act
         FindPaths<Index> findPaths = new FindPaths<>(graph);
         Collection<Collection<Index>> paths = findPaths.findAllPaths(Index.from(2, 2));
 
         // Assert
-        Assertions.assertEquals(3, paths.size());
+        pathsValidation(expectedPaths, paths);
     }
 
     @Test
@@ -470,12 +539,15 @@ public class FindPathsTest {
         IMatrix<Integer> matrix = new StandardMatrix(mat);
         IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(1, 2));
 
+        List<List<Index>> expectedPaths = new ArrayList<>(1);
+        expectedPaths.add(Arrays.asList(Index.from(1, 2), Index.from(1, 1), Index.from(1, 0), Index.from(2, 0), Index.from(3, 0), Index.from(4, 0), Index.from(4, 1), Index.from(4, 2), Index.from(3, 2)));
+
         // Act
         FindPaths<Index> findPaths = new FindPaths<>(graph);
         Collection<Collection<Index>> paths = findPaths.findAllPaths(Index.from(3, 2));
 
         // Assert
-        Assertions.assertEquals(1, paths.size());
+        pathsValidation(expectedPaths, paths);
     }
 
     @Test
@@ -491,12 +563,15 @@ public class FindPathsTest {
         IMatrix<Integer> matrix = new CrossMatrix(mat);
         IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(1, 2));
 
+        List<List<Index>> expectedPaths = new ArrayList<>(1);
+        expectedPaths.add(Arrays.asList(Index.from(1, 2), Index.from(2, 1), Index.from(3, 2), Index.from(4, 3)));
+
         // Act
         FindPaths<Index> findPaths = new FindPaths<>(graph);
         Collection<Collection<Index>> paths = findPaths.findAllPaths(Index.from(4, 3));
 
         // Assert
-        Assertions.assertEquals(1, paths.size());
+        pathsValidation(expectedPaths, paths);
     }
 
     @Test
