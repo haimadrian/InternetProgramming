@@ -6,8 +6,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
-import java.util.HashMap;
+import java.lang.ref.WeakReference;
 import java.util.Map;
+import java.util.WeakHashMap;
 
 /**
  * A class representing a location at some matrix.<br/>
@@ -18,8 +19,14 @@ import java.util.Map;
  */
 @EqualsAndHashCode
 public class Index {
+    /**
+     * Maintain a weak cache of indices.<br/>
+     * This allows us to compare indices using ==. Not only that, we do not create billions of indices, we just
+     * get the same indices out of the cache.<br/>
+     * We use a weak cache to let the gc free those indices in case their are no longer referenced.
+     */
     @JsonIgnore
-    private static final Map<Index, Index> indicesCache = new HashMap<>();
+    static final Map<Index, WeakReference<Index>> indicesCache = new WeakHashMap<>();
 
     @Getter
     private final int row;
@@ -46,7 +53,7 @@ public class Index {
     @JsonCreator
     public static Index from(@JsonProperty("row") int row, @JsonProperty("column") int column) {
         // Get an index from cache.
-        return indicesCache.computeIfAbsent(new Index(row, column), newIndex -> newIndex);
+        return indicesCache.computeIfAbsent(new Index(row, column), WeakReference::new).get();
     }
 }
 
