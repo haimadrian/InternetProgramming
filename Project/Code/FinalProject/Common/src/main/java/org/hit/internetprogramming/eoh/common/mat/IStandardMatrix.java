@@ -21,22 +21,22 @@ public interface IStandardMatrix<T> extends IMatrix<T> {
         if ((index != null) && (index.getRow() >= 0) && (index.getRow() < rows()) && (index.getColumn() >= 0) && (index.getColumn() < cols())) {
             // Top
             if (index.getRow() > 0) {
-                neighbors.add(new Index(index.getRow() - 1, index.getColumn()));
+                neighbors.add(Index.from(index.getRow() - 1, index.getColumn()));
             }
 
             // Bottom
             if (index.getRow() < (rows() - 1)) {
-                neighbors.add(new Index(index.getRow() + 1, index.getColumn()));
+                neighbors.add(Index.from(index.getRow() + 1, index.getColumn()));
             }
 
             // Left
             if (index.getColumn() > 0) {
-                neighbors.add(new Index(index.getRow(), index.getColumn() - 1));
+                neighbors.add(Index.from(index.getRow(), index.getColumn() - 1));
             }
 
             // Right
             if (index.getColumn() < (cols() - 1)) {
-                neighbors.add(new Index(index.getRow(), index.getColumn() + 1));
+                neighbors.add(Index.from(index.getRow(), index.getColumn() + 1));
             }
         }
 

@@ -41,6 +41,19 @@ public class MatrixGraphAdapter<T> implements IGraph<Index> {
       this.root = root;
    }
 
+   /**
+    * A constructor used to copy another graph's matrix, and use a new root.<br/>
+    * This constructor is used by algorithms that start their work from a graph's root, and
+    * we do not want to modify the original graph's root.<br/>
+    * Note that the underlying matrix is the same one, and not a copy.
+    * @param graph The graph to copy
+    * @param newRoot A root to use as the new root
+    */
+   public MatrixGraphAdapter(IGraph<T> graph, Index newRoot) {
+      this.matrix = ((MatrixGraphAdapter<T>)graph).matrix;
+      this.root = newRoot;
+   }
+
    @Override
    public Index getRoot() {
       return root;

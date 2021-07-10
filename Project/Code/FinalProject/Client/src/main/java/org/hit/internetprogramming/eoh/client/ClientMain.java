@@ -9,10 +9,14 @@ import org.hit.internetprogramming.eoh.common.action.ActionType;
 import org.hit.internetprogramming.eoh.common.comms.HttpStatus;
 import org.hit.internetprogramming.eoh.common.comms.Request;
 import org.hit.internetprogramming.eoh.common.comms.Response;
+import org.hit.internetprogramming.eoh.common.comms.TwoVerticesBody;
 import org.hit.internetprogramming.eoh.common.graph.IGraph;
 import org.hit.internetprogramming.eoh.common.graph.MatrixGraphAdapter;
 import org.hit.internetprogramming.eoh.common.log.LoggingStream;
-import org.hit.internetprogramming.eoh.common.mat.*;
+import org.hit.internetprogramming.eoh.common.mat.IMatrix;
+import org.hit.internetprogramming.eoh.common.mat.Index;
+import org.hit.internetprogramming.eoh.common.mat.MatrixType;
+import org.hit.internetprogramming.eoh.common.util.JsonUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -21,6 +25,8 @@ import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
+import java.util.Collection;
+import java.util.List;
 import java.util.Scanner;
 
 /**
@@ -61,56 +67,48 @@ public class ClientMain {
             do {
                 MenuAction choice = showMenu(scanner);
                 switch (choice) {
-                    case CREATE_GRAPH: {
+                    case CREATE_GRAPH:
                         createNewGraph(scanner);
                         break;
-                    }
-                    case LOAD_GRAPH: {
+                    case LOAD_GRAPH:
                         loadGraphFromFile(scanner);
                         break;
-                    }
-                    case SAVE_GRAPH: {
+                    case SAVE_GRAPH:
                         saveGraphToFile(scanner);
                         break;
-                    }
-                    case GENERATE_RANDOM_GRAPH_STANDARD:
-                    case GENERATE_RANDOM_GRAPH_CROSS: {
-                        executeIndexedAction(scanner, "Please enter dimension in tuple format. e.g. (5, 5)", choice.getActionType(), true);
+                    case GENERATE_RANDOM_GRAPH:
+                        generateRandomGraph(scanner);
                         break;
-                    }
                     case GET_NEIGHBORS:
-                    case GET_REACHABLES: {
-                        executeIndexedAction(scanner, "Please enter index in tuple format. e.g. (1, 1)", choice.getActionType(), false);
+                    case GET_REACHABLES:
+                        Index index = readIndex(scanner, "Please enter index in tuple format. e.g. (1, 1)");
+                        executeRequest(new Request(choice.getActionType(), index), false, new TypeReference<List<Index>>() {});
                         break;
-                    }
-                    case CONNECTED_COMPONENTS:{
-                        executeRequest(new Request(ActionType.CONNECTED_COMPONENTS), false);
+                    case CONNECTED_COMPONENTS:
+                        executeRequest(new Request(ActionType.CONNECTED_COMPONENTS), false, new TypeReference<List<Index>>() {});
                         break;
-                    }
-                    case PRINT_GRAPH: {
-                        executeRequest(new Request(ActionType.PRINT_GRAPH), true);
+                    case SHORTEST_PATHS:
+                        Index source = readIndex(scanner, "Please enter source index in tuple format. e.g. (0, 0)");
+                        Index dest = readIndex(scanner, "Please enter destination index in tuple format. e.g. (2, 2)");
+                        executeRequest(new Request(ActionType.SHORTEST_PATHS, new TwoVerticesBody<>(source, dest)), false, new TypeReference<List<Collection<Index>>>() {});
                         break;
-                    }
-                    default: {
+                    case PRINT_GRAPH:
+                        executeRequest(new Request(ActionType.PRINT_GRAPH), true, null);
+                        break;
+                    default:
                         isRunning = false;
                         GraphWebService.getInstance().disconnect();
                         log.info("Good bye!");
-                    }
                 }
             } while (isRunning);
         }
     }
 
-    private void executeRequest(Request request, boolean resultAsMessage) {
+    private <T> void executeRequest(Request request, boolean resultAsMessage, TypeReference<T> responseType) {
         Response response = GraphWebService.getInstance().executeRequest(request);
         if (isOkResponse(response)) {
-            log.info("Result: " + System.lineSeparator() + (resultAsMessage ? response.getMessage() : response.getValue()) + System.lineSeparator());
+            log.info("Result: " + System.lineSeparator() + (resultAsMessage ? response.getMessage() : response.getBodyAs(responseType)) + System.lineSeparator());
         }
-    }
-
-    private void executeIndexedAction(Scanner scanner, String instruction, ActionType actionType, boolean resultAsMessage) {
-        Index index = readIndex(scanner, instruction);
-        executeRequest(new Request(actionType, index), resultAsMessage);
     }
 
     private void saveGraphToFile(Scanner scanner) {
@@ -119,8 +117,9 @@ public class ClientMain {
             File file = readFileName(scanner, "Please enter file path to save graph to. e.g. graph1.json", false);
 
             try {
+                IGraph<Index> graph = response.getBodyAs(new TypeReference<>() {});
                 Files.write(file.toPath(),
-                    GraphWebService.getInstance().getObjectMapper().writeValueAsString(response.getGraph()).getBytes(StandardCharsets.UTF_8),
+                    JsonUtils.writeValueAsString(graph).getBytes(StandardCharsets.UTF_8),
                     StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
 
                 log.info("Graph stored to: " + file.getCanonicalPath() + System.lineSeparator());
@@ -135,7 +134,7 @@ public class ClientMain {
 
         try {
             IGraph<Index> graph = GraphWebService.getInstance().getObjectMapper().readValue(new FileInputStream(file), new TypeReference<>() {});
-            Response response = GraphWebService.getInstance().executeRequest(new Request(ActionType.PUT_GRAPH, graph, null, false));
+            Response response = GraphWebService.getInstance().executeRequest(new Request(ActionType.PUT_GRAPH, graph));
             if (isOkResponse(response)) {
                 log.info("Graph sent to server successfully. file=" + file.getCanonicalPath() + System.lineSeparator());
             }
@@ -150,10 +149,10 @@ public class ClientMain {
         int matrixKind = readChoice(scanner, 1, MatrixType.values().length);
         IMatrix<Integer> matrix = MatrixType.values()[matrixKind - 1].newInstance(dimension.getRow(), dimension.getColumn());
 
-        log.info("Enter matrix values, row by row. You have to enter 0 or 1 only, and you have chosen to create a matrix with " + (dimension.getRow() * dimension.getColumn()) + " elements");
+        log.info("Enter matrix values, cell by cell. You have to enter 0 or 1 only, and you have chosen to create a matrix with " + (dimension.getRow() * dimension.getColumn()) + " elements");
         for (int i = 0; i < dimension.getRow(); i++) {
             for (int j = 0; j < dimension.getColumn(); j++) {
-                matrix.setValue(new Index(i, j), readChoice(scanner, 0, 1));
+                matrix.setValue(Index.from(i, j), readChoice(scanner, 0, 1));
             }
         }
 
@@ -164,10 +163,31 @@ public class ClientMain {
 
         IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, root);
 
-        Response response = GraphWebService.getInstance().executeRequest(new Request(ActionType.PUT_GRAPH, graph, null, false));
+        Response response = GraphWebService.getInstance().executeRequest(new Request(ActionType.PUT_GRAPH, graph));
         if (isOkResponse(response)) {
             log.info("Graph sent to server successfully." + System.lineSeparator());
         }
+    }
+
+    private void generateRandomGraph(Scanner scanner) {
+        Index dimension = readIndex(scanner, "Enter matrix dimension. e.g. (3, 3)");
+        log.info("Enter matrix kind (1=Standard, 2=Cross , 3=Regular)");
+        int matrixKind = readChoice(scanner, 1, MatrixType.values().length);
+
+        ActionType actionType;
+        switch (MatrixType.values()[matrixKind - 1]) {
+            case STANDARD:
+                actionType = ActionType.GENERATE_RANDOM_GRAPH_STANDARD;
+                break;
+            case CROSS:
+                actionType = ActionType.GENERATE_RANDOM_GRAPH_CROSS;
+                break;
+            default:
+                actionType = ActionType.GENERATE_RANDOM_GRAPH_REGULAR;
+                break;
+        }
+
+        executeRequest(new Request(actionType, dimension), true, null);
     }
 
     private boolean isOkResponse(Response response) {
@@ -221,7 +241,7 @@ public class ClientMain {
             try {
                 // Get rid of "(" and ")", then split by "," so we will have the two numbers.
                 String[] nums = input.substring(1, input.length() - 1).split(",");
-                index = new Index(Integer.parseInt(nums[0]), Integer.parseInt(nums[1]));
+                index = Index.from(Integer.parseInt(nums[0]), Integer.parseInt(nums[1]));
             } catch (Exception ignore) { }
 
             if (index == null) {

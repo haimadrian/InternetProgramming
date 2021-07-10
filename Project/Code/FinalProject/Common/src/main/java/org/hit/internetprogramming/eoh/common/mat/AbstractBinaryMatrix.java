@@ -21,7 +21,7 @@ abstract class AbstractBinaryMatrix extends AbstractMatrix<Integer> {
         super(from.length, from[0].length);
         for (int row = 0; row < from.length; row++) {
             for (int col = 0; col < from[0].length; col++) {
-                setValue(new Index(row, col), from[row][col]);
+                setValue(Index.from(row, col), from[row][col]);
             }
         }
     }
@@ -48,13 +48,13 @@ abstract class AbstractBinaryMatrix extends AbstractMatrix<Integer> {
             SecureRandom rand = new SecureRandom();
             for (int row = 0; row < rows; row++) {
                 for (int col = 0; col < cols; col++) {
-                    setValue(new Index(row, col), rand.nextInt(2));
+                    setValue(Index.from(row, col), rand.nextInt(2));
                 }
             }
         } else {
             for (int row = 0; row < rows; row++) {
                 for (int col = 0; col < cols; col++) {
-                    setValue(new Index(row, col), 0);
+                    setValue(Index.from(row, col), 0);
                 }
             }
         }

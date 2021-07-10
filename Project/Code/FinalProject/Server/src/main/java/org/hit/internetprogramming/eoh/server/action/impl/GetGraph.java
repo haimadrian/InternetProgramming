@@ -21,7 +21,7 @@ public class GetGraph implements Action {
     public Response execute(ActionContext actionContext) {
         IGraph<Index> graph = Graphs.getInstance().getGraph(actionContext.getClientInfo());
         if (graph == null) {
-            return Response.error(HttpStatus.NOT_FOUND.getCode(), "No graph was initialized. Please put graph or generate one", actionContext.getRequest().isHttpRequest());
+            return Response.error(HttpStatus.NOT_FOUND.getCode(), "No graph was initialized. Please put graph or generate one", actionContext.getRequest().isHttp());
         }
 
         return Response.ok((MatrixGraphAdapter<?>) graph);

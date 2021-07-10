@@ -1,12 +1,11 @@
 package org.hit.internetprogramming.eoh.common.comms;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.hit.internetprogramming.eoh.common.action.ActionType;
-import org.hit.internetprogramming.eoh.common.graph.IGraph;
-import org.hit.internetprogramming.eoh.common.graph.MatrixGraphAdapter;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.JsonNode;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 import org.hit.internetprogramming.eoh.common.mat.Index;
 
 import java.util.List;
@@ -26,50 +25,45 @@ import java.util.List;
  * @author Haim Adrian
  * @since 13-Apr-21
  */
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class Response {
+@ToString(callSuper = true)
+@EqualsAndHashCode(callSuper = true)
+public class Response extends AbstractWritable {
     /**
      * HTTP status code, to support OK / ERROR responses.
      * @see HttpStatus
      */
-    private int status;
+    @Getter
+    private final int status;
 
     /**
      * An optional message to use as a result for simple OK / ERROR responses
      */
-    private String message;
-
-    /**
-     * An action response value, as a list. (list of neighbors / reachables)
-     */
-    private List<Index> value;
-
-    /**
-     * The content of a {@link ActionType#GET_GRAPH GET_GRAPH} response. Can be null
-     */
-    private IGraph<Index> graph;
-
-    /**
-     * Used to mark responses that we detect as HTTP requests, so the response can be an HTTP response.
-     * @see Request#isHttpRequest()
-     */
-    @JsonIgnore
-    private boolean isHttpResponse;
+    @Getter
+    private final String message;
 
     /**
      * Constructs a new {@link Response} model
      * @param status {@link HttpStatus HTTP status} to mark this response as.
      * @param message An optional message, in case of simple success, or a failure.
-     * @param value List of vertices to return using this response. (When responding to {@link ActionType#GET_NEIGHBORS} for example)
+     * @param body The body to set
      * @param isHttpResponse Whether this is an HTTP response or regular socket one.
+     * @see AbstractWritable#AbstractWritable(Object, boolean)
      */
-    public Response(int status, String message, List<Index> value, boolean isHttpResponse) {
+    public Response(int status, String message, Object body, boolean isHttpResponse) {
+        super(body, isHttpResponse);
         this.status = status;
         this.message = message;
-        this.value = value;
-        this.isHttpResponse = isHttpResponse;
+    }
+
+    /**
+     * Constructs a new {@link Response} with json body. This constructor is for json marshalling. Don't use it
+     * @param status {@link HttpStatus HTTP status} to mark this response as.
+     * @param message An optional message, in case of simple success, or a failure.
+     * @param body The body to set
+     */
+    @JsonCreator
+    public Response(@JsonProperty(value = "status") int status, @JsonProperty(value = "message") String message, @JsonProperty(value = "body") JsonNode body) {
+        this(status, message, body, false);
     }
 
     // Builders to ease the use of this class when returning a response from server.
@@ -78,19 +72,15 @@ public class Response {
         return ok(HttpStatus.OK.getCode(), (List<Index>) null);
     }
 
-    public static Response ok(List<Index> value) {
-        return ok(HttpStatus.OK.getCode(), value);
+    public static <T> Response ok(T value) {
+        return new Response(HttpStatus.OK.getCode(), null, value, false);
     }
 
-    public static Response ok(MatrixGraphAdapter<?> value) {
-        return new Response(HttpStatus.OK.getCode(), null, null, value, false);
-    }
-
-    public static Response ok(int status, List<Index> value) {
+    public static <T> Response ok(int status, T value) {
         return ok(status, value, false);
     }
 
-    public static Response ok(int status, List<Index> value, boolean isHttpResponse) {
+    public static <T> Response ok(int status, T value, boolean isHttpResponse) {
         return new Response(status, null, value, isHttpResponse);
     }
 
@@ -124,10 +114,6 @@ public class Response {
 
     public static Response error(int status, String errorMessage, boolean isHttpResponse) {
         return new Response(status, errorMessage, null, isHttpResponse);
-    }
-
-    public static Response badRequest() {
-        return badRequest(HttpStatus.BAD_REQUEST.getCode(), HttpStatus.BAD_REQUEST.name());
     }
 
     public static Response badRequest(String errorMessage) {

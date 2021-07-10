@@ -19,12 +19,12 @@ public class PrintGraph implements Action {
     public Response execute(ActionContext actionContext) {
         IGraph<Object> graph = Graphs.getInstance().getGraph(actionContext.getClientInfo());
         if (graph == null) {
-            return Response.error(HttpStatus.NOT_FOUND.getCode(), "No graph was initialized. Please put graph or generate one", actionContext.getRequest().isHttpRequest());
+            return Response.error(HttpStatus.NOT_FOUND.getCode(), "No graph was initialized. Please put graph or generate one", actionContext.getRequest().isHttp());
         }
 
         String graphAsString = graph.printGraph();
         log.info("Graph: " + System.lineSeparator() + graphAsString);
-        return Response.ok(graphAsString, actionContext.getRequest().isHttpRequest());
+        return Response.ok(graphAsString, actionContext.getRequest().isHttp());
     }
 }
 

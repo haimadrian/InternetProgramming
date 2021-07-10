@@ -1,9 +1,13 @@
 package org.hit.internetprogramming.eoh.common.mat;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * A class representing a location at some matrix.<br/>
@@ -14,14 +18,16 @@ import lombok.Getter;
  */
 @EqualsAndHashCode
 public class Index {
-    @Getter
-    private int row;
+    @JsonIgnore
+    private static final Map<Index, Index> indicesCache = new HashMap<>();
 
     @Getter
-    private int column;
+    private final int row;
 
-    @JsonCreator
-    public Index(@JsonProperty("row") int row, @JsonProperty("column") int column) {
+    @Getter
+    private final int column;
+
+    private Index(int row, int column) {
         this.row = row;
         this.column = column;
     }
@@ -29,6 +35,18 @@ public class Index {
     @Override
     public String toString() {
         return "(" + row + ", " + column + ')';
+    }
+
+    /**
+     * Get or create a new {@link Index} for the specified row and column.
+     * @param row Row of an index
+     * @param column Column of an index
+     * @return The index
+     */
+    @JsonCreator
+    public static Index from(@JsonProperty("row") int row, @JsonProperty("column") int column) {
+        // Get an index from cache.
+        return indicesCache.computeIfAbsent(new Index(row, column), newIndex -> newIndex);
     }
 }
 
