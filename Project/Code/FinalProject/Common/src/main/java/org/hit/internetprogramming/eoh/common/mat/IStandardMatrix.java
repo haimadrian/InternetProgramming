@@ -1,5 +1,7 @@
 package org.hit.internetprogramming.eoh.common.mat;
 
+import lombok.Getter;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,34 +14,43 @@ import java.util.List;
  * @see IStandardMatrix
  */
 public interface IStandardMatrix<T> extends IMatrix<T> {
-
+    @Override
     default List<Index> neighbors(Index index) {
         List<Index> neighbors = new ArrayList<>();
 
         // Instead of falling into potential exceptions, which might affect the performance,
         // just validate bounds.
         if ((index != null) && (index.getRow() >= 0) && (index.getRow() < rows()) && (index.getColumn() >= 0) && (index.getColumn() < cols())) {
-            // Top
-            if (index.getRow() > 0) {
-                neighbors.add(Index.from(index.getRow() - 1, index.getColumn()));
-            }
-
-            // Bottom
-            if (index.getRow() < (rows() - 1)) {
-                neighbors.add(Index.from(index.getRow() + 1, index.getColumn()));
-            }
-
-            // Left
-            if (index.getColumn() > 0) {
-                neighbors.add(Index.from(index.getRow(), index.getColumn() - 1));
-            }
-
-            // Right
-            if (index.getColumn() < (cols() - 1)) {
-                neighbors.add(Index.from(index.getRow(), index.getColumn() + 1));
+            // Go over every direction to check if it is within bounds, and if so, add it as a neighbor.
+            for (Direction direction : Direction.values()) {
+                Index neighbor = Index.from(index.getRow() + direction.getRowDirection(), index.getColumn() + direction.getColumnDirection());
+                if ((neighbor.getRow() >= 0) && (neighbor.getRow() < rows()) && (neighbor.getColumn() >= 0) && (neighbor.getColumn() < cols())) {
+                    neighbors.add(neighbor);
+                }
             }
         }
 
         return neighbors;
+    }
+
+    /**
+     * Directions to go in case of a standard matrix.
+     */
+    enum Direction {
+        TOP(-1, 0),
+        BOTTOM(1, 0),
+        LEFT(0, -1),
+        RIGHT(0, 1);
+
+        @Getter
+        private final int rowDirection;
+
+        @Getter
+        private final int columnDirection;
+
+        Direction(int rowDirection, int columnDirection) {
+            this.rowDirection = rowDirection;
+            this.columnDirection = columnDirection;
+        }
     }
 }
