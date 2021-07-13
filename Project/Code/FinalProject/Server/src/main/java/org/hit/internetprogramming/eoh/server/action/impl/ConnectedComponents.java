@@ -9,7 +9,7 @@ import org.hit.internetprogramming.eoh.server.action.ActionContext;
 import org.hit.internetprogramming.eoh.server.graph.algorithm.DFSVisit;
 import org.hit.internetprogramming.eoh.server.impl.Graphs;
 
-import java.util.List;
+import java.util.HashSet;
 
 public class ConnectedComponents implements Action {
 
@@ -21,7 +21,9 @@ public class ConnectedComponents implements Action {
         }
 
         DFSVisit<Index> dfsVisit = new DFSVisit<>();
-        List<Index> connectedComponents = dfsVisit.traverse(graph);
-        return Response.ok(HttpStatus.OK.getCode(), connectedComponents, actionContext.getRequest().isHttpRequest());
+        HashSet<Index> connectedComponents = dfsVisit.traverse(graph);
+
+        //return Response.ok(HttpStatus.OK.getCode(), connectedComponents, actionContext.getRequest().isHttpRequest());
+        return  Response.error();//Only for compile the script
     }
 }
