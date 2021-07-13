@@ -1,12 +1,12 @@
 package org.hit.internetprogramming.eoh.client.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import lombok.extern.log4j.Log4j2;
 import org.hit.internetprogramming.eoh.common.action.ActionType;
 import org.hit.internetprogramming.eoh.common.comms.HttpStatus;
 import org.hit.internetprogramming.eoh.common.comms.Request;
 import org.hit.internetprogramming.eoh.common.comms.Response;
+import org.hit.internetprogramming.eoh.common.util.JsonUtils;
 
 import java.io.*;
 import java.net.Socket;
@@ -35,19 +35,7 @@ public class GraphWebService {
     private final ObjectMapper objectMapper;
 
     private GraphWebService() {
-        objectMapper = initializeObjectMapper();
-    }
-
-    private ObjectMapper initializeObjectMapper() {
-        final ObjectMapper objectMapper = new ObjectMapper();
-
-        // Do not enable standard indentation ("pretty-printing"), cause the client depends on the new line character
-        // objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
-
-        // Allow serialization of "empty" POJOs (no properties to serialize)
-        objectMapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
-
-        return objectMapper;
+        objectMapper = JsonUtils.createObjectMapper();
     }
 
     /**

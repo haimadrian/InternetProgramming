@@ -1,5 +1,7 @@
 package org.hit.internetprogramming.eoh.common.mat;
 
+import lombok.Getter;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,38 +14,43 @@ import java.util.List;
  * @see IStandardMatrix
  */
 public interface ICrossMatrix<T> extends IMatrix<T>  {
-
+    @Override
     default List<Index> neighbors(Index index) {
         List<Index> neighbors = new ArrayList<>();
 
         // Instead of falling into potential exceptions, which might affect the performance,
         // just validate bounds.
         if ((index != null) && (index.getRow() >= 0) && (index.getRow() < rows()) && (index.getColumn() >= 0) && (index.getColumn() < cols())) {
-            if (index.getRow() > 0) {
-                // Top Left
-                if (index.getColumn() > 0) {
-                    neighbors.add(new Index(index.getRow() - 1, index.getColumn() - 1));
-                }
-
-                // Top Right
-                if (index.getColumn() < (cols() - 1)) {
-                    neighbors.add(new Index(index.getRow() - 1, index.getColumn() + 1));
-                }
-            }
-
-            if (index.getRow() < (rows() - 1)) {
-                // Bottom Left
-                if (index.getColumn() > 0) {
-                    neighbors.add(new Index(index.getRow() + 1, index.getColumn() - 1));
-                }
-
-                // Bottom Right
-                if (index.getColumn() < (cols() - 1)) {
-                    neighbors.add(new Index(index.getRow() + 1, index.getColumn() + 1));
+            // Go over every direction to check if it is within bounds, and if so, add it as a neighbor.
+            for (Direction direction : Direction.values()) {
+                Index neighbor = Index.from(index.getRow() + direction.getRowDirection(), index.getColumn() + direction.getColumnDirection());
+                if ((neighbor.getRow() >= 0) && (neighbor.getRow() < rows()) && (neighbor.getColumn() >= 0) && (neighbor.getColumn() < cols())) {
+                    neighbors.add(neighbor);
                 }
             }
         }
 
         return neighbors;
+    }
+
+    /**
+     * Directions to go in case of a cross matrix.
+     */
+    enum Direction {
+        TOP_LEFT(-1, -1),
+        TOP_RIGHT(-1, 1),
+        BOTTOM_LEFT(1, -1),
+        BOTTOM_RIGHT(1, 1);
+
+        @Getter
+        private final int rowDirection;
+
+        @Getter
+        private final int columnDirection;
+
+        Direction(int rowDirection, int columnDirection) {
+            this.rowDirection = rowDirection;
+            this.columnDirection = columnDirection;
+        }
     }
 }

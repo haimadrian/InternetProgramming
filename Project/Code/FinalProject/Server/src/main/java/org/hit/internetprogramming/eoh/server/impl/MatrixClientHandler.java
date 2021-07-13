@@ -1,13 +1,14 @@
 package org.hit.internetprogramming.eoh.server.impl;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import lombok.extern.log4j.Log4j2;
 import org.hit.internetprogramming.eoh.common.action.ActionType;
 import org.hit.internetprogramming.eoh.common.comms.HttpStatus;
 import org.hit.internetprogramming.eoh.common.comms.Request;
 import org.hit.internetprogramming.eoh.common.comms.Response;
 import org.hit.internetprogramming.eoh.common.mat.Index;
+import org.hit.internetprogramming.eoh.common.util.JsonUtils;
 import org.hit.internetprogramming.eoh.server.action.ActionExecutor;
 import org.hit.internetprogramming.eoh.server.common.ClientInfo;
 import org.hit.internetprogramming.eoh.server.common.RequestHandler;
@@ -79,19 +80,7 @@ public class MatrixClientHandler implements RequestHandler {
      * Constructs a new {@link MatrixClientHandler}
      */
     public MatrixClientHandler() {
-        objectMapper = initializeObjectMapper();
-    }
-
-    private ObjectMapper initializeObjectMapper() {
-        final ObjectMapper objectMapper = new ObjectMapper();
-
-        // Do not enable standard indentation ("pretty-printing"), cause the client depends on the new line character
-        // objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
-
-        // Allow serialization of "empty" POJOs (no properties to serialize)
-        objectMapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
-
-        return objectMapper;
+        objectMapper = JsonUtils.createObjectMapper();
     }
 
     @Override
@@ -112,7 +101,7 @@ public class MatrixClientHandler implements RequestHandler {
 
         if ((request != null) && (request.getActionType() != ActionType.DISCONNECT)) {
             stopCommunicating = Boolean.FALSE;
-            if (request.isHttpRequest()) {
+            if (request.isHttp()) {
                 // In order to recognize a user from browser (HTTP), we reset its port because every HTTP request
                 // arrives as a new socket, with a different port.
                 client = client.toBuilder().port(0).build();
@@ -132,7 +121,7 @@ public class MatrixClientHandler implements RequestHandler {
         }
 
         stopCommunication.accept(stopCommunicating);
-        return responseToString(response, request != null && request.isHttpRequest());
+        return responseToString(response, request != null && request.isHttp());
     }
 
     @Override
@@ -153,7 +142,7 @@ public class MatrixClientHandler implements RequestHandler {
     private String responseToString(Response response, boolean httpRequest) throws IOException {
         String responseString = objectMapper.writeValueAsString(response);
 
-        if (httpRequest || response.isHttpResponse()) {
+        if (httpRequest || response.isHttp()) {
             String contentFormatted = formatContentForHttp(response);
             String body = String.format(HTTP_BODY, responseString, contentFormatted);
             responseString = String.format(HTTP_HEADERS, response.getStatus(), HttpStatus.valueOf(response.getStatus()).name(), "text/html", body.length()) + END_OF_HEADERS + body;
@@ -164,8 +153,9 @@ public class MatrixClientHandler implements RequestHandler {
 
     private String formatContentForHttp(Response response) {
         String result = "Content:<br>";
-        if (response.getValue() != null) {
-            result += response.getValue().toString();
+        JsonNode body = response.getBodyAs(JsonNode.class);
+        if (body != null) {
+            result += body.toString();
         } else {
             result += response.getMessage().replaceAll("\\n", "<br>").replaceAll(" ", "&nbsp;");
         }
@@ -252,7 +242,7 @@ public class MatrixClientHandler implements RequestHandler {
             }
         }
 
-        return new Index(row, col);
+        return Index.from(row, col);
     }
 
     private int parseInteger(String valueToParse, String paramName) throws WebException {

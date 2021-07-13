@@ -1,14 +1,17 @@
 package org.hit.internetprogramming.eoh.common.comms;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.databind.JsonNode;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 import org.hit.internetprogramming.eoh.common.action.ActionType;
 import org.hit.internetprogramming.eoh.common.graph.IGraph;
 import org.hit.internetprogramming.eoh.common.mat.Index;
+
+
+
 
 /**
  * A request model is used by both server and client.<br/>
@@ -20,65 +23,54 @@ import org.hit.internetprogramming.eoh.common.mat.Index;
  * @author Haim Adrian
  * @since 13-Apr-21
  */
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class Request {
+@ToString(callSuper = true)
+@EqualsAndHashCode(callSuper = true)
+public class Request extends AbstractWritable {
     /**
      * What action to execute
      */
-    private ActionType actionType;
-
-    /**
-     * The content of a {@link ActionType#PUT_GRAPH PUT_GRAPH} request. Can be null
-     */
-    private IGraph<Index> graph;
-
-    /**
-     * When sending GET neighbors / reachables request, there is additional parameter telling the location to get the response for.<br/>
-     * When sending a GENERATE request, we use this as the dimension of a matrix. e.g. 3x3
-     */
-    private Index vertex;
-
-    /**
-     * Used to mark requests that we detect as HTTP requests, so the response can be an HTTP response.<br/>
-     * We support receiving HTTP requests from browser, so we can have another client to play with<br/>
-     * This field is ignored from json as it is relevant for server only.
-     * @see Request#isHttpRequest()
-     */
-    @JsonIgnore
-    private boolean isHttpRequest;
+    @Getter
+    private final ActionType actionType;
 
     /**
      * Constructs a new {@link Request} with no body
      * @param actionType The {@link ActionType action type}
+     * @see AbstractWritable#AbstractWritable(Object, boolean)
      */
     public Request(ActionType actionType) {
         this(actionType, null);
     }
 
     /**
-     * Constructs a new {@link Request} with vertex as its body.<br/>
-     * Used for actions like {@link ActionType#GET_NEIGHBORS}, to define which vertex we want to get the neighbors for
+     * Constructs a new {@link Request} with json body. This constructor is for json marshalling. Don't use it
      * @param actionType The {@link ActionType action type}
-     * @param vertex The vertex to use as body. Can be {@code null}
+     * @param body The body to set
      */
     @JsonCreator
-    public Request(@JsonProperty("actionType") ActionType actionType, @JsonProperty(value = "vertex") Index vertex) {
-        this(actionType, vertex, false);
+    public Request(@JsonProperty("actionType") ActionType actionType, @JsonProperty(value = "body") JsonNode body) {
+        this(actionType, body, false);
     }
 
     /**
-     * Constructs a new {@link Request} with vertex as its body, and a flag indicating whether it is an HTTP request.<br/>
+     * Constructs a new {@link Request} with any body.
+     * @param actionType The {@link ActionType action type}
+     * @param body The body to set
+     * @see AbstractWritable#AbstractWritable(Object, boolean)
+     */
+    public Request(ActionType actionType, Object body) {
+        this(actionType, body, false);
+    }
+
+    /**
+     * Constructs a new {@link Request} with any body, and a flag indicating whether it is an HTTP request.<br/>
      * Used by server when it handles HTTP requests and map them to the Request model.
      * @param actionType The {@link ActionType action type}
-     * @param vertex The vertex to use as body. Can be {@code null}
+     * @param body The body to set
      * @param isHttpRequest Whether this is an HTTP request or regular socket one. Default value is false.
+     * @see AbstractWritable#AbstractWritable(Object, boolean)
      */
-    public Request(ActionType actionType, Index vertex, boolean isHttpRequest) {
+    public Request(ActionType actionType, Object body, boolean isHttpRequest) {
+        super(body, isHttpRequest);
         this.actionType = actionType;
-        this.vertex = vertex == null ? new Index(5, 5) : vertex;
-        this.isHttpRequest = isHttpRequest;
     }
 }
-
