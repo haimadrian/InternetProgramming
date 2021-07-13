@@ -11,6 +11,13 @@ import org.hit.internetprogramming.eoh.server.impl.Graphs;
 
 import java.util.HashSet;
 
+/**
+ * A class for receiving all the connected components in a graph.<br/>
+ * The graph is represented by a matrix.
+ * @author Orel Gershonovich
+ * @since   9-July-21
+ * @see DFSVisit
+ */
 public class ConnectedComponents implements Action {
 
     @Override
