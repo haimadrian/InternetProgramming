@@ -24,12 +24,11 @@ public class ConnectedComponents implements Action {
     public Response execute(ActionContext actionContext) {
         IGraph<Index> graph = Graphs.getInstance().getGraph(actionContext.getClientInfo());
         if (graph == null) {
-            return Response.error(HttpStatus.NOT_FOUND.getCode(), "No graph was initialized. Please put graph or generate one", actionContext.getRequest().isHttpRequest());
+            return Response.error(HttpStatus.NOT_FOUND.getCode(), "No graph was initialized. Please put graph or generate one", actionContext.getRequest().isHttp());
         }
 
         DFSVisit<Index> dfsVisit = new DFSVisit<>();
         List<Index> connectedComponents = dfsVisit.traverse(graph);
-
-        return Response.ok(HttpStatus.OK.getCode(), connectedComponents, actionContext.getRequest().isHttpRequest());
+        return Response.ok(HttpStatus.OK.getCode(), connectedComponents, actionContext.getRequest().isHttp());
     }
 }

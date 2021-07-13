@@ -24,17 +24,17 @@ public class GetVertices implements Action {
     public Response execute(ActionContext actionContext) {
         IGraph<Index> graph = Graphs.getInstance().getGraph(actionContext.getClientInfo());
         if (graph == null) {
-            return Response.error(HttpStatus.NOT_FOUND.getCode(), "No graph was initialized. Please put graph or generate one", actionContext.getRequest().isHttpRequest());
+            return Response.error(HttpStatus.NOT_FOUND.getCode(), "No graph was initialized. Please put graph or generate one", actionContext.getRequest().isHttp());
         }
 
         List<Index> vertices;
         if (actionContext.getRequest().getActionType() == ActionType.GET_REACHABLES) {
-            vertices = graph.getReachableVertices(actionContext.getRequest().getVertex());
+            vertices = graph.getReachableVertices(actionContext.getRequest().getBodyAs(Index.class));
         } else {
-            vertices = graph.getAdjacentVertices(actionContext.getRequest().getVertex());
+            vertices = graph.getAdjacentVertices(actionContext.getRequest().getBodyAs(Index.class));
         }
 
-        return Response.ok(HttpStatus.OK.getCode(), vertices, actionContext.getRequest().isHttpRequest());
+        return Response.ok(HttpStatus.OK.getCode(), vertices, actionContext.getRequest().isHttp());
     }
 }
 

@@ -15,11 +15,11 @@ public enum MenuAction {
     CREATE_GRAPH("Create Graph (Enter matrix and send it to server)", ActionType.PUT_GRAPH),
     LOAD_GRAPH("Load Graph From File (Load graph and send it to server)", null),
     SAVE_GRAPH("Save Graph To File (Get graph from server and save it)", null),
-    GENERATE_RANDOM_GRAPH_STANDARD("Generate Random Graph (Using standard matrix)", ActionType.GENERATE_RANDOM_GRAPH_STANDARD),
-    GENERATE_RANDOM_GRAPH_CROSS("Generate Random Graph (Using cross matrix)", ActionType.GENERATE_RANDOM_GRAPH_CROSS),
+    GENERATE_RANDOM_GRAPH("Generate Random Graph", null),
     GET_NEIGHBORS("Get Neighbor Vertices", ActionType.GET_NEIGHBORS),
     GET_REACHABLES("Get Reachable Vertices", ActionType.GET_REACHABLES),
-    CONNECTED_COMPONENTS("Get connected components ", ActionType.CONNECTED_COMPONENTS),
+    CONNECTED_COMPONENTS("Get Connected Components ", ActionType.CONNECTED_COMPONENTS),
+    SHORTEST_PATHS("Find Shortest Paths ", ActionType.SHORTEST_PATHS),
     PRINT_GRAPH("Print Graph", ActionType.PRINT_GRAPH);
 
     /**
