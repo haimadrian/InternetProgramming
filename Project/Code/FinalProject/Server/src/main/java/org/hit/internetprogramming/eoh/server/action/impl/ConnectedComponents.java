@@ -9,7 +9,7 @@ import org.hit.internetprogramming.eoh.server.action.ActionContext;
 import org.hit.internetprogramming.eoh.server.graph.algorithm.DFSVisit;
 import org.hit.internetprogramming.eoh.server.impl.Graphs;
 
-import java.util.HashSet;
+import java.util.List;
 
 /**
  * A class for receiving all the connected components in a graph.<br/>
@@ -28,9 +28,8 @@ public class ConnectedComponents implements Action {
         }
 
         DFSVisit<Index> dfsVisit = new DFSVisit<>();
-        HashSet<Index> connectedComponents = dfsVisit.traverse(graph);
+        List<Index> connectedComponents = dfsVisit.traverse(graph);
 
-        //return Response.ok(HttpStatus.OK.getCode(), connectedComponents, actionContext.getRequest().isHttpRequest());
-        return  Response.error();//Only for compile the script
+        return Response.ok(HttpStatus.OK.getCode(), connectedComponents, actionContext.getRequest().isHttpRequest());
     }
 }
