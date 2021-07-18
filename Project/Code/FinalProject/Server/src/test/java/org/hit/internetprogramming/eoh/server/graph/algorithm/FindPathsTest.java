@@ -2,7 +2,12 @@ package org.hit.internetprogramming.eoh.server.graph.algorithm;
 
 import org.hit.internetprogramming.eoh.common.graph.IGraph;
 import org.hit.internetprogramming.eoh.common.graph.MatrixGraphAdapter;
-import org.hit.internetprogramming.eoh.common.mat.*;
+import org.hit.internetprogramming.eoh.common.mat.IMatrix;
+import org.hit.internetprogramming.eoh.common.mat.Index;
+import org.hit.internetprogramming.eoh.common.mat.impl.CrossMatrix;
+import org.hit.internetprogramming.eoh.common.mat.impl.Matrix;
+import org.hit.internetprogramming.eoh.common.mat.impl.StandardMatrix;
+import org.hit.internetprogramming.eoh.server.common.exception.InputTooLargeException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -33,13 +38,13 @@ public class FindPathsTest {
     public void testFindShortestPaths_useStandardMatrix_findNoPath() {
         // Arrange
         //@formatter:off
-        int[][] mat = {{1, 1, 1, 1, 0},
-                       {1, 1, 0, 0, 1},
-                       {1, 0, 1, 0, 1},
-                       {1, 1, 0, 1, 1},
-                       {1, 1, 1, 1, 1}};
+        Integer[][] mat = {{1, 1, 1, 1, 0},
+                           {1, 1, 0, 0, 1},
+                           {1, 0, 1, 0, 1},
+                           {1, 1, 0, 1, 1},
+                           {1, 1, 1, 1, 1}};
         //@formatter:on
-        IMatrix<Integer> matrix = new StandardMatrix(mat);
+        IMatrix<Integer> matrix = new StandardMatrix<>(replaceZeroesWithNulls(mat));
         IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(0, 0));
 
         List<List<Index>> expectedPaths = new ArrayList<>(0);
@@ -56,12 +61,12 @@ public class FindPathsTest {
     public void testFindShortestPaths_useCrossMatrix_findNoPath() {
         // Arrange
         //@formatter:off
-        int[][] mat = {{1, 1, 1, 1},
-                       {1, 1, 0, 1},
-                       {1, 1, 0, 1},
-                       {1, 1, 1, 1}};
+        Integer[][] mat = {{1, 1, 1, 1},
+                           {1, 1, 0, 1},
+                           {1, 1, 0, 1},
+                           {1, 1, 1, 1}};
         //@formatter:on
-        IMatrix<Integer> matrix = new CrossMatrix(mat);
+        IMatrix<Integer> matrix = new CrossMatrix<>(replaceZeroesWithNulls(mat));
         IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(0, 0));
 
         List<List<Index>> expectedPaths = new ArrayList<>(0);
@@ -78,12 +83,12 @@ public class FindPathsTest {
     public void testFindShortestPaths_useRegularMatrix_findNoPath() {
         // Arrange
         //@formatter:off
-        int[][] mat = {{1, 1, 1, 1},
-                       {1, 1, 0, 1},
-                       {1, 1, 0, 0},
-                       {1, 1, 0, 1}};
+        Integer[][] mat = {{1, 1, 1, 1},
+                           {1, 1, 0, 1},
+                           {1, 1, 0, 0},
+                           {1, 1, 0, 1}};
         //@formatter:on
-        IMatrix<Integer> matrix = new RegularMatrix(mat);
+        IMatrix<Integer> matrix = new Matrix<>(replaceZeroesWithNulls(mat));
         IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(0, 0));
 
         List<List<Index>> expectedPaths = new ArrayList<>(0);
@@ -97,16 +102,38 @@ public class FindPathsTest {
     }
 
     @Test
+    public void testFindShortestPaths_useRegularMatrixWithSize51x51_catchException() {
+        // Arrange
+        Integer[][] mat = new Integer[51][51];
+        IMatrix<Integer> matrix = new Matrix<>(mat);
+        IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(0, 0));
+
+        Throwable thrown = null;
+
+        // Act
+        try {
+            FindPaths<Index> findPaths = new FindPaths<>(graph);
+            findPaths.findShortestPaths(Index.from(3, 3));
+        } catch (Throwable t) {
+            thrown = t;
+        }
+
+        // Assert
+        Assertions.assertNotNull(thrown, "Supposed to fail with exception when size is bigger than 50x50");
+        Assertions.assertTrue(thrown instanceof InputTooLargeException, "Expected exception is InputTooLargeException");
+    }
+
+    @Test
     public void testFindShortestPaths_useStandardMatrix_findOnePath() {
         // Arrange
         //@formatter:off
-        int[][] mat = {{1, 0, 1, 1, 0},
-                       {1, 1, 0, 0, 1},
-                       {1, 0, 1, 0, 1},
-                       {1, 0, 1, 0, 1},
-                       {1, 1, 1, 1, 1}};
+        Integer[][] mat = {{1, 0, 1, 1, 0},
+                           {1, 1, 0, 0, 1},
+                           {1, 0, 1, 0, 1},
+                           {1, 0, 1, 0, 1},
+                           {1, 1, 1, 1, 1}};
         //@formatter:on
-        IMatrix<Integer> matrix = new StandardMatrix(mat);
+        IMatrix<Integer> matrix = new StandardMatrix<>(replaceZeroesWithNulls(mat));
         IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(0, 0));
 
         Collection<Collection<Index>> expectedPaths = new ArrayList<>(1);
@@ -124,13 +151,13 @@ public class FindPathsTest {
     public void testFindShortestPaths_useCrossMatrix_findOnePath() {
         // Arrange
         //@formatter:off
-        int[][] mat = {{1, 1, 0, 1},
-                       {1, 1, 0, 1},
-                       {1, 1, 1, 1},
-                       {1, 0, 1, 1},
-                       {1, 1, 1, 1}};
+        Integer[][] mat = {{1, 1, 0, 1},
+                           {1, 1, 0, 1},
+                           {1, 1, 1, 1},
+                           {1, 0, 1, 1},
+                           {1, 1, 1, 1}};
         //@formatter:on
-        IMatrix<Integer> matrix = new CrossMatrix(mat);
+        IMatrix<Integer> matrix = new CrossMatrix<>(replaceZeroesWithNulls(mat));
         IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(0, 0));
 
         Collection<Collection<Index>> expectedPaths = new ArrayList<>(1);
@@ -148,13 +175,13 @@ public class FindPathsTest {
     public void testFindShortestPaths_useRegularMatrix_findOnePath() {
         // Arrange
         //@formatter:off
-        int[][] mat = {{1, 1, 1, 1, 0},
-                       {1, 0, 0, 0, 1},
-                       {1, 0, 1, 0, 1},
-                       {1, 0, 1, 0, 1},
-                       {1, 1, 1, 1, 1}};
+        Integer[][] mat = {{1, 1, 1, 1, 0},
+                           {1, 0, 0, 0, 1},
+                           {1, 0, 1, 0, 1},
+                           {1, 0, 1, 0, 1},
+                           {1, 1, 1, 1, 1}};
         //@formatter:on
-        IMatrix<Integer> matrix = new RegularMatrix(mat);
+        IMatrix<Integer> matrix = new Matrix<>(replaceZeroesWithNulls(mat));
         IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(0, 0));
 
         Collection<Collection<Index>> expectedPaths = new ArrayList<>(1);
@@ -172,13 +199,13 @@ public class FindPathsTest {
     public void testFindShortestPaths_useStandardMatrix_findTwoShortPathsOutOfThreePaths() {
         // Arrange
         //@formatter:off
-        int[][] mat = {{1, 1, 1, 1, 0},
-                       {1, 0, 1, 0, 1},
-                       {1, 1, 1, 1, 1},
-                       {1, 0, 1, 0, 1},
-                       {1, 1, 1, 0, 1}};
+        Integer[][] mat = {{1, 1, 1, 1, 0},
+                           {1, 0, 1, 0, 1},
+                           {1, 1, 1, 1, 1},
+                           {1, 0, 1, 0, 1},
+                           {1, 1, 1, 0, 1}};
         //@formatter:on
-        IMatrix<Integer> matrix = new StandardMatrix(mat);
+        IMatrix<Integer> matrix = new StandardMatrix<>(replaceZeroesWithNulls(mat));
         IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(0, 0));
 
         List<List<Index>> expectedPaths = new ArrayList<>(2);
@@ -197,14 +224,14 @@ public class FindPathsTest {
     public void testFindShortestPaths_useCrossMatrix_findTwoShortPathsOutOfThreePaths() {
         // Arrange
         //@formatter:off
-        int[][] mat = {{1, 0, 1, 0, 1},
-                       {0, 1, 0, 1, 1},
-                       {1, 0, 0, 1, 1},
-                       {0, 1, 0, 1, 1},
-                       {1, 1, 1, 1, 1},
-                       {1, 1, 1, 1, 1}};
+        Integer[][] mat = {{1, 0, 1, 0, 1},
+                           {0, 1, 0, 1, 1},
+                           {1, 0, 0, 1, 1},
+                           {0, 1, 0, 1, 1},
+                           {1, 1, 1, 1, 1},
+                           {1, 1, 1, 1, 1}};
         //@formatter:on
-        IMatrix<Integer> matrix = new CrossMatrix(mat);
+        IMatrix<Integer> matrix = new CrossMatrix<>(replaceZeroesWithNulls(mat));
         IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(0, 0));
 
         List<List<Index>> expectedPaths = new ArrayList<>(2);
@@ -222,13 +249,13 @@ public class FindPathsTest {
     public void testFindShortestPaths_useStandardMatrixWithAnotherRoot_findOnePath() {
         // Arrange
         //@formatter:off
-        int[][] mat = {{1, 0, 1, 1, 0},
-                       {1, 1, 1, 0, 1},
-                       {1, 0, 0, 1, 1},
-                       {1, 0, 1, 0, 1},
-                       {1, 1, 1, 1, 1}};
+        Integer[][] mat = {{1, 0, 1, 1, 0},
+                           {1, 1, 1, 0, 1},
+                           {1, 0, 0, 1, 1},
+                           {1, 0, 1, 0, 1},
+                           {1, 1, 1, 1, 1}};
         //@formatter:on
-        IMatrix<Integer> matrix = new StandardMatrix(mat);
+        IMatrix<Integer> matrix = new StandardMatrix<>(replaceZeroesWithNulls(mat));
         IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(1, 2));
 
         List<List<Index>> expectedPaths = new ArrayList<>(1);
@@ -246,13 +273,13 @@ public class FindPathsTest {
     public void testFindShortestPaths_useCrossMatrixWithAnotherRoot_findOnePath() {
         // Arrange
         //@formatter:off
-        int[][] mat = {{1, 1, 0, 1},
-                       {0, 1, 1, 1},
-                       {1, 1, 1, 0},
-                       {1, 0, 1, 1},
-                       {1, 0, 1, 1}};
+        Integer[][] mat = {{1, 1, 0, 1},
+                           {0, 1, 1, 1},
+                           {1, 1, 1, 0},
+                           {1, 0, 1, 1},
+                           {1, 0, 1, 1}};
         //@formatter:on
-        IMatrix<Integer> matrix = new CrossMatrix(mat);
+        IMatrix<Integer> matrix = new CrossMatrix<>(replaceZeroesWithNulls(mat));
         IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(1, 2));
 
         List<List<Index>> expectedPaths = new ArrayList<>(1);
@@ -270,13 +297,13 @@ public class FindPathsTest {
     public void testFindShortestPaths_useStandardMatrixWithAnotherRoot_findOneShortPathOutOfThreePaths() {
         // Arrange
         //@formatter:off
-        int[][] mat = {{1, 1, 1, 1, 0},
-                       {1, 0, 1, 0, 1},
-                       {1, 1, 1, 0, 1},
-                       {1, 0, 1, 0, 1},
-                       {1, 1, 1, 0, 1}};
+        Integer[][] mat = {{1, 1, 1, 1, 0},
+                           {1, 0, 1, 0, 1},
+                           {1, 1, 1, 0, 1},
+                           {1, 0, 1, 0, 1},
+                           {1, 1, 1, 0, 1}};
         //@formatter:on
-        IMatrix<Integer> matrix = new StandardMatrix(mat);
+        IMatrix<Integer> matrix = new StandardMatrix<>(replaceZeroesWithNulls(mat));
         IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(1, 2));
 
         List<List<Index>> expectedPaths = new ArrayList<>(1);
@@ -294,12 +321,12 @@ public class FindPathsTest {
     public void testFindShortestPaths_useCrossMatrixWithAnotherRoot_findOneShortPathOutOfTwoPaths() {
         // Arrange
         //@formatter:off
-        int[][] mat = {{1, 0, 1, 0},
-                       {0, 1, 0, 1},
-                       {1, 1, 1, 1},
-                       {0, 1, 0, 1}};
+        Integer[][] mat = {{1, 0, 1, 0},
+                           {0, 1, 0, 1},
+                           {1, 1, 1, 1},
+                           {0, 1, 0, 1}};
         //@formatter:on
-        IMatrix<Integer> matrix = new CrossMatrix(mat);
+        IMatrix<Integer> matrix = new CrossMatrix<>(replaceZeroesWithNulls(mat));
         IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(1, 3));
 
         List<List<Index>> expectedPaths = new ArrayList<>(1);
@@ -317,18 +344,18 @@ public class FindPathsTest {
     public void testFindShortestPaths_useRegularMatrixWithAnotherRoot_findSixShortPathsOutOfMillionPaths() {
         // Arrange
         //@formatter:off
-        int[][] mat = {{1, 1, 1, 0, 0, 1, 1, 0, 1, 0},
-                       {0, 0, 0, 0, 0, 1, 1, 1, 0, 0},
-                       {0, 1, 0, 1, 0, 0, 1, 1, 0, 1},
-                       {1, 1, 1, 1, 0, 0, 0, 0, 1, 0},
-                       {0, 0, 0, 1, 1, 1, 1, 0, 0, 0},
-                       {0, 0, 0, 0, 1, 1, 1, 0, 1, 1},
-                       {1, 1, 0, 0, 0, 0, 1, 1, 0, 1},
-                       {0, 0, 1, 1, 1, 0, 1, 1, 1, 0},
-                       {1, 0, 1, 1, 0, 1, 1, 0, 0, 0},
-                       {1, 0, 0, 0, 1, 1, 0, 0, 1, 0}};
+        Integer[][] mat = {{1, 1, 1, 0, 0, 1, 1, 0, 1, 0},
+                           {0, 0, 0, 0, 0, 1, 1, 1, 0, 0},
+                           {0, 1, 0, 1, 0, 0, 1, 1, 0, 1},
+                           {1, 1, 1, 1, 0, 0, 0, 0, 1, 0},
+                           {0, 0, 0, 1, 1, 1, 1, 0, 0, 0},
+                           {0, 0, 0, 0, 1, 1, 1, 0, 1, 1},
+                           {1, 1, 0, 0, 0, 0, 1, 1, 0, 1},
+                           {0, 0, 1, 1, 1, 0, 1, 1, 1, 0},
+                           {1, 0, 1, 1, 0, 1, 1, 0, 0, 0},
+                           {1, 0, 0, 0, 1, 1, 0, 0, 1, 0}};
         //@formatter:on
-        IMatrix<Integer> matrix = new RegularMatrix(mat);
+        IMatrix<Integer> matrix = new Matrix<>(replaceZeroesWithNulls(mat));
         IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(3, 1));
 
         List<List<Index>> expectedPaths = new ArrayList<>(3);
@@ -351,18 +378,18 @@ public class FindPathsTest {
     public void testFindShortestPaths_useRegularMatrixWithAnotherRoot_findThreeShortPathsOutOfMillionPaths() {
         // Arrange
         //@formatter:off
-        int[][] mat = {{1, 1, 1, 0, 0, 1, 1, 0, 1, 0},
-                       {0, 0, 0, 0, 0, 1, 1, 1, 0, 0},
-                       {0, 1, 0, 1, 0, 0, 1, 1, 0, 1},
-                       {1, 1, 1, 1, 0, 0, 0, 0, 1, 0},
-                       {0, 0, 0, 1, 1, 1, 1, 0, 0, 0},
-                       {0, 0, 0, 0, 1, 1, 1, 0, 1, 1},
-                       {1, 1, 0, 0, 0, 0, 1, 1, 0, 1},
-                       {0, 0, 1, 1, 1, 1, 1, 1, 0, 0},
-                       {1, 0, 1, 1, 0, 1, 1, 0, 0, 0},
-                       {1, 0, 0, 0, 1, 1, 0, 0, 1, 0}};
+        Integer[][] mat = {{1, 1, 1, 0, 0, 1, 1, 0, 1, 0},
+                           {0, 0, 0, 0, 0, 1, 1, 1, 0, 0},
+                           {0, 1, 0, 1, 0, 0, 1, 1, 0, 1},
+                           {1, 1, 1, 1, 0, 0, 0, 0, 1, 0},
+                           {0, 0, 0, 1, 1, 1, 1, 0, 0, 0},
+                           {0, 0, 0, 0, 1, 1, 1, 0, 1, 1},
+                           {1, 1, 0, 0, 0, 0, 1, 1, 0, 1},
+                           {0, 0, 1, 1, 1, 1, 1, 1, 0, 0},
+                           {1, 0, 1, 1, 0, 1, 1, 0, 0, 0},
+                           {1, 0, 0, 0, 1, 1, 0, 0, 1, 0}};
         //@formatter:on
-        IMatrix<Integer> matrix = new RegularMatrix(mat);
+        IMatrix<Integer> matrix = new Matrix<>(replaceZeroesWithNulls(mat));
         IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(3, 1));
 
         Collection<List<Index>> expectedPaths = new ArrayList<>(3);
@@ -386,13 +413,13 @@ public class FindPathsTest {
     public void testFindAllPaths_useStandardMatrix_findNoPath() {
         // Arrange
         //@formatter:off
-        int[][] mat = {{1, 1, 1, 1, 0},
-                       {1, 1, 0, 0, 1},
-                       {1, 0, 1, 0, 1},
-                       {1, 1, 0, 1, 1},
-                       {1, 1, 1, 1, 1}};
+        Integer[][] mat = {{1, 1, 1, 1, 0},
+                           {1, 1, 0, 0, 1},
+                           {1, 0, 1, 0, 1},
+                           {1, 1, 0, 1, 1},
+                           {1, 1, 1, 1, 1}};
         //@formatter:on
-        IMatrix<Integer> matrix = new StandardMatrix(mat);
+        IMatrix<Integer> matrix = new StandardMatrix<>(replaceZeroesWithNulls(mat));
         IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(0, 0));
 
         List<List<Index>> expectedPaths = new ArrayList<>();
@@ -409,12 +436,12 @@ public class FindPathsTest {
     public void testFindAllPaths_useCrossMatrix_findNoPath() {
         // Arrange
         //@formatter:off
-        int[][] mat = {{1, 1, 1, 1},
-                       {1, 1, 0, 1},
-                       {1, 1, 0, 1},
-                       {1, 1, 1, 1}};
+        Integer[][] mat = {{1, 1, 1, 1},
+                           {1, 1, 0, 1},
+                           {1, 1, 0, 1},
+                           {1, 1, 1, 1}};
         //@formatter:on
-        IMatrix<Integer> matrix = new CrossMatrix(mat);
+        IMatrix<Integer> matrix = new CrossMatrix<>(replaceZeroesWithNulls(mat));
         IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(0, 0));
 
         List<List<Index>> expectedPaths = new ArrayList<>(0);
@@ -431,13 +458,13 @@ public class FindPathsTest {
     public void testFindAllPaths_useStandardMatrix_findOnePath() {
         // Arrange
         //@formatter:off
-        int[][] mat = {{1, 0, 1, 1, 0},
-                       {1, 1, 0, 0, 1},
-                       {1, 0, 1, 0, 1},
-                       {1, 0, 1, 0, 1},
-                       {1, 1, 1, 1, 1}};
+        Integer[][] mat = {{1, 0, 1, 1, 0},
+                           {1, 1, 0, 0, 1},
+                           {1, 0, 1, 0, 1},
+                           {1, 0, 1, 0, 1},
+                           {1, 1, 1, 1, 1}};
         //@formatter:on
-        IMatrix<Integer> matrix = new StandardMatrix(mat);
+        IMatrix<Integer> matrix = new StandardMatrix<>(replaceZeroesWithNulls(mat));
         IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(0, 0));
 
         Collection<Collection<Index>> expectedPaths = new ArrayList<>(1);
@@ -455,13 +482,13 @@ public class FindPathsTest {
     public void testFindAllPaths_useCrossMatrix_findOnePath() {
         // Arrange
         //@formatter:off
-        int[][] mat = {{1, 1, 0, 1},
-                       {1, 1, 0, 1},
-                       {1, 1, 1, 1},
-                       {1, 0, 1, 1},
-                       {1, 1, 1, 1}};
+        Integer[][] mat = {{1, 1, 0, 1},
+                           {1, 1, 0, 1},
+                           {1, 1, 1, 1},
+                           {1, 0, 1, 1},
+                           {1, 1, 1, 1}};
         //@formatter:on
-        IMatrix<Integer> matrix = new CrossMatrix(mat);
+        IMatrix<Integer> matrix = new CrossMatrix<>(replaceZeroesWithNulls(mat));
         IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(0, 0));
 
         Collection<Collection<Index>> expectedPaths = new ArrayList<>(1);
@@ -479,13 +506,13 @@ public class FindPathsTest {
     public void testFindAllPaths_useStandardMatrix_findThreePaths() {
         // Arrange
         //@formatter:off
-        int[][] mat = {{1, 1, 1, 1, 0},
-                       {1, 0, 1, 0, 1},
-                       {1, 1, 1, 1, 1},
-                       {1, 0, 1, 0, 1},
-                       {1, 1, 1, 0, 1}};
+        Integer[][] mat = {{1, 1, 1, 1, 0},
+                           {1, 0, 1, 0, 1},
+                           {1, 1, 1, 1, 1},
+                           {1, 0, 1, 0, 1},
+                           {1, 1, 1, 0, 1}};
         //@formatter:on
-        IMatrix<Integer> matrix = new StandardMatrix(mat);
+        IMatrix<Integer> matrix = new StandardMatrix<>(replaceZeroesWithNulls(mat));
         IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(0, 0));
 
         List<List<Index>> expectedPaths = new ArrayList<>(3);
@@ -505,12 +532,12 @@ public class FindPathsTest {
     public void testFindAllPaths_useCrossMatrix_findThreePaths() {
         // Arrange
         //@formatter:off
-        int[][] mat = {{1, 0, 1, 0},
-                       {0, 1, 0, 1},
-                       {1, 1, 1, 1},
-                       {0, 1, 0, 1}};
+        Integer[][] mat = {{1, 0, 1, 0},
+                           {0, 1, 0, 1},
+                           {1, 1, 1, 1},
+                           {0, 1, 0, 1}};
         //@formatter:on
-        IMatrix<Integer> matrix = new CrossMatrix(mat);
+        IMatrix<Integer> matrix = new CrossMatrix<>(replaceZeroesWithNulls(mat));
         IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(0, 0));
 
         List<List<Index>> expectedPaths = new ArrayList<>(3);
@@ -530,13 +557,13 @@ public class FindPathsTest {
     public void testFindAllPaths_useStandardMatrixWithAnotherRoot_findOnePath() {
         // Arrange
         //@formatter:off
-        int[][] mat = {{1, 0, 1, 1, 0},
-                       {1, 1, 1, 0, 1},
-                       {1, 0, 0, 1, 1},
-                       {1, 0, 1, 0, 1},
-                       {1, 1, 1, 1, 1}};
+        Integer[][] mat = {{1, 0, 1, 1, 0},
+                           {1, 1, 1, 0, 1},
+                           {1, 0, 0, 1, 1},
+                           {1, 0, 1, 0, 1},
+                           {1, 1, 1, 1, 1}};
         //@formatter:on
-        IMatrix<Integer> matrix = new StandardMatrix(mat);
+        IMatrix<Integer> matrix = new StandardMatrix<>(replaceZeroesWithNulls(mat));
         IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(1, 2));
 
         List<List<Index>> expectedPaths = new ArrayList<>(1);
@@ -554,13 +581,13 @@ public class FindPathsTest {
     public void testFindAllPaths_useCrossMatrixWithAnotherRoot_findOnePath() {
         // Arrange
         //@formatter:off
-        int[][] mat = {{1, 1, 0, 1},
-                       {0, 1, 1, 1},
-                       {1, 1, 1, 0},
-                       {1, 0, 1, 1},
-                       {1, 0, 1, 1}};
+        Integer[][] mat = {{1, 1, 0, 1},
+                           {0, 1, 1, 1},
+                           {1, 1, 1, 0},
+                           {1, 0, 1, 1},
+                           {1, 0, 1, 1}};
         //@formatter:on
-        IMatrix<Integer> matrix = new CrossMatrix(mat);
+        IMatrix<Integer> matrix = new CrossMatrix<>(replaceZeroesWithNulls(mat));
         IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(1, 2));
 
         List<List<Index>> expectedPaths = new ArrayList<>(1);
@@ -578,13 +605,13 @@ public class FindPathsTest {
     public void testFindAllPaths_useStandardMatrixWithAnotherRoot_findThreePaths() {
         // Arrange
         //@formatter:off
-        int[][] mat = {{1, 1, 1, 1, 0},
-                       {1, 0, 1, 0, 1},
-                       {1, 1, 1, 0, 1},
-                       {1, 0, 1, 0, 1},
-                       {1, 1, 1, 0, 1}};
+        Integer[][] mat = {{1, 1, 1, 1, 0},
+                           {1, 0, 1, 0, 1},
+                           {1, 1, 1, 0, 1},
+                           {1, 0, 1, 0, 1},
+                           {1, 1, 1, 0, 1}};
         //@formatter:on
-        IMatrix<Integer> matrix = new StandardMatrix(mat);
+        IMatrix<Integer> matrix = new StandardMatrix<>(replaceZeroesWithNulls(mat));
         IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(1, 2));
 
         // Act
@@ -599,12 +626,12 @@ public class FindPathsTest {
     public void testFindAllPaths_useCrossMatrixWithAnotherRoot_findThreePaths() {
         // Arrange
         //@formatter:off
-        int[][] mat = {{1, 0, 1, 0},
-                       {0, 1, 0, 1},
-                       {1, 1, 1, 1},
-                       {0, 1, 0, 1}};
+        Integer[][] mat = {{1, 0, 1, 0},
+                           {0, 1, 0, 1},
+                           {1, 1, 1, 1},
+                           {0, 1, 0, 1}};
         //@formatter:on
-        IMatrix<Integer> matrix = new CrossMatrix(mat);
+        IMatrix<Integer> matrix = new CrossMatrix<>(replaceZeroesWithNulls(mat));
         IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(1, 3));
 
         // Act
@@ -619,18 +646,18 @@ public class FindPathsTest {
     public void testFindAllPaths_useRegularMatrixWithAnotherRoot_findAllPaths() {
         // Arrange
         //@formatter:off
-        int[][] mat = {{1, 1, 1, 0, 0, 1, 1, 0, 1, 0},
-                       {0, 0, 0, 0, 0, 1, 1, 1, 0, 0},
-                       {0, 1, 0, 1, 0, 0, 1, 1, 0, 1},
-                       {1, 1, 1, 1, 0, 0, 0, 0, 1, 0},
-                       {0, 0, 0, 1, 1, 1, 1, 0, 0, 0},
-                       {0, 0, 0, 0, 1, 1, 1, 0, 1, 1},
-                       {1, 1, 0, 0, 0, 0, 1, 1, 0, 1},
-                       {0, 0, 1, 1, 1, 0, 1, 1, 1, 0},
-                       {1, 0, 1, 1, 0, 1, 1, 0, 0, 0},
-                       {1, 0, 0, 0, 1, 1, 0, 0, 1, 0}};
+        Integer[][] mat = {{1, 1, 1, 0, 0, 1, 1, 0, 1, 0},
+                           {0, 0, 0, 0, 0, 1, 1, 1, 0, 0},
+                           {0, 1, 0, 1, 0, 0, 1, 1, 0, 1},
+                           {1, 1, 1, 1, 0, 0, 0, 0, 1, 0},
+                           {0, 0, 0, 1, 1, 1, 1, 0, 0, 0},
+                           {0, 0, 0, 0, 1, 1, 1, 0, 1, 1},
+                           {1, 1, 0, 0, 0, 0, 1, 1, 0, 1},
+                           {0, 0, 1, 1, 1, 0, 1, 1, 1, 0},
+                           {1, 0, 1, 1, 0, 1, 1, 0, 0, 0},
+                           {1, 0, 0, 0, 1, 1, 0, 0, 1, 0}};
         //@formatter:on
-        IMatrix<Integer> matrix = new RegularMatrix(mat);
+        IMatrix<Integer> matrix = new Matrix<>(replaceZeroesWithNulls(mat));
         IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(3, 1));
 
         // Act
@@ -639,5 +666,49 @@ public class FindPathsTest {
 
         // Assert
         Assertions.assertEquals(1138020, paths.size());
+    }
+
+    //////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////// Tests For Weighted Graph //////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////
+
+    @Test
+    public void testFindShortestPaths_useWeightedGraph_findShortestPath() {
+        // Arrange
+        //@formatter:off
+        Integer[][] mat = {{100, 100, 100},
+                           {500, 900, 300}};
+        //@formatter:on
+        IMatrix<Integer> matrix = new StandardMatrix<>(mat);
+        IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(1, 0));
+
+        List<List<Index>> expectedPaths = new ArrayList<>(1);
+        expectedPaths.add(Arrays.asList(Index.from(1, 0), Index.from(0, 0), Index.from(0, 1), Index.from(0, 2), Index.from(1, 2)));
+
+        // Act
+        FindPaths<Index> findPaths = new FindPaths<>(graph);
+        Collection<Collection<Index>> paths = findPaths.findShortestPathsInWeightedGraph(Index.from(1, 2));
+
+        // Assert
+        pathsValidation(expectedPaths, paths);
+    }
+
+    /**
+     * Go over the specified matrix and replace all 0's with nulls, thus making it easier for us
+     * to see the matrices with zeroes, when reading the code, but treating 0 as null cause
+     * we depend on null values as !hasValue, to know which neighbors are reachable.
+     * @param matrix The matrix to fix
+     * @return A reference to the specified matrix, after the update
+     */
+    private static Integer[][] replaceZeroesWithNulls(Integer[][] matrix) {
+        for (int i = 0; i < matrix.length; i++) {
+            for (int j = 0; j < matrix[i].length; j++) {
+                if (matrix[i][j] == 0) {
+                    matrix[i][j] = null;
+                }
+            }
+        }
+
+        return matrix;
     }
 }

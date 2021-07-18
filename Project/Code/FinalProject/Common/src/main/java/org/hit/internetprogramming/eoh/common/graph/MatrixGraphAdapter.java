@@ -3,6 +3,8 @@ package org.hit.internetprogramming.eoh.common.graph;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.commons.lang3.tuple.MutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.hit.internetprogramming.eoh.common.mat.IMatrix;
 import org.hit.internetprogramming.eoh.common.mat.Index;
 
@@ -77,15 +79,52 @@ public class MatrixGraphAdapter<T> implements IGraph<Index> {
 
    @Override
    public String printGraph() {
-      return matrix.printMatrix().replace("0", " ");
+      return matrix.printMatrix().replace("null", " ");
    }
 
    @Override
    public String toString() {
-      return matrix.toString().replace("0", " ");
+      return matrix.toString().replace("null", " ");
    }
 
-   public IMatrix<T> getMatrix() {
-      return matrix;
+   @Override
+   public int getGraphSize() {
+      return matrix.rows() * matrix.cols();
+   }
+
+   @Override
+   public List<Index> getVertices() {
+      List<Index> vertices = new ArrayList<>();
+
+      for (int i = 0; i < matrix.rows(); i++) {
+         for (int j = 0; j < matrix.cols(); j++) {
+            Index currVertex = Index.from(i, j);
+            if (matrix.hasValue(currVertex)) {
+               vertices.add(currVertex);
+            }
+         }
+      }
+
+      return vertices;
+   }
+
+   @Override
+   public List<Pair<Index, Index>> getEdges() {
+      List<Index> vertices = getVertices();
+      List<Pair<Index, Index>> edges = new ArrayList<>(vertices.size());
+
+      for (Index vertex : vertices) {
+         for (Index neighbor : getReachableVertices(vertex)) {
+            edges.add(MutablePair.of(vertex, neighbor));
+         }
+      }
+
+      return edges;
+   }
+
+   @SuppressWarnings("unchecked")
+   @Override
+   public T getValue(Index vertex) {
+      return matrix.getValue(vertex);
    }
 }

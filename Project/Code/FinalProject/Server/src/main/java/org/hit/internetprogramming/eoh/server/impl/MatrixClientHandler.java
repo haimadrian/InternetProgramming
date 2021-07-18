@@ -199,9 +199,9 @@ public class MatrixClientHandler implements RequestHandler {
 
         Request request;
         if (httpPathLower.contains(GENERATE_GRAPH_STANDARD_PATH)) {
-            request = new Request(ActionType.GENERATE_RANDOM_GRAPH_STANDARD, fetchIndexFromQuery(httpPathLower, false), true);
+            request = new Request(ActionType.GENERATE_RANDOM_BINARY_GRAPH_STANDARD, fetchIndexFromQuery(httpPathLower, false), true);
         } else if (httpPathLower.contains(GENERATE_GRAPH_CROSS_PATH)) {
-            request = new Request(ActionType.GENERATE_RANDOM_GRAPH_CROSS, fetchIndexFromQuery(httpPathLower, false), true);
+            request = new Request(ActionType.GENERATE_RANDOM_BINARY_GRAPH_CROSS, fetchIndexFromQuery(httpPathLower, false), true);
         }  else if (httpPathLower.contains(NEIGHBORS_PATH)) {
             request = new Request(ActionType.GET_NEIGHBORS, fetchIndexFromQuery(httpPathLower, true), true);
         } else if (httpPathLower.contains(REACHABLES_PATH)) {

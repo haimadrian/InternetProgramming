@@ -1,6 +1,6 @@
 package org.hit.internetprogramming.eoh.server.graph.algorithm;
 
-import lombok.*;
+import lombok.NonNull;
 import org.hit.internetprogramming.eoh.common.graph.IGraph;
 
 import java.util.*;
@@ -12,7 +12,7 @@ import java.util.*;
  * @author Haim Adrian
  * @since 10-Jul-21
  */
-public class BFSVisit<V> {
+public class BFSVisit<V> implements ShortestPathAlgorithm<V> {
     /**
      * A queue we are using during the BFS algorithm, to traverse the graph.
      */
@@ -21,7 +21,7 @@ public class BFSVisit<V> {
     /**
      * A map between visited vertices and their info. (distance, parents)
      */
-    private final ThreadLocal<Map<V, VertexBFSInfo<V>>> visitedVertices = ThreadLocal.withInitial(HashMap::new);
+    private final ThreadLocal<Map<V, VertexDistanceInfo<V>>> visitedVertices = ThreadLocal.withInitial(HashMap::new);
 
     /**
      * Algorithm:<br/>
@@ -42,7 +42,8 @@ public class BFSVisit<V> {
      * @return Vertex info about all vertices we have visited while traversing from root. (Not necessarily all vertices in the graph)
      * @see #traverse(IGraph, Object)
      */
-    public Map<V, VertexBFSInfo<V>> traverse(@NonNull IGraph<V> graph) {
+    @Override
+    public Map<V, VertexDistanceInfo<V>> traverse(@NonNull IGraph<V> graph) {
         return traverse(graph, null);
     }
 
@@ -68,16 +69,17 @@ public class BFSVisit<V> {
      * @return Vertex info about all vertices we have visited while traversing from root. (Not necessarily all vertices in the graph)
      * @see #traverse(IGraph)
      */
-    public Map<V, VertexBFSInfo<V>> traverse(@NonNull IGraph<V> graph, V destination) {
+    @Override
+    public Map<V, VertexDistanceInfo<V>> traverse(@NonNull IGraph<V> graph, V destination) {
         Deque<V> workingQueue = this.workingQueue.get();
-        Map<V, VertexBFSInfo<V>> visitedVertices = this.visitedVertices.get();
+        Map<V, VertexDistanceInfo<V>> visitedVertices = this.visitedVertices.get();
 
         workingQueue.clear();
         visitedVertices.clear();
 
         V currVertex = graph.getRoot();
         workingQueue.add(currVertex);
-        visitedVertices.computeIfAbsent(currVertex, VertexBFSInfo::new).setDistance(0);
+        visitedVertices.computeIfAbsent(currVertex, VertexDistanceInfo::new).setDistance(0);
 
         // As long as we haven't reached nowhere (We scanned all reachable vertices)
         while (!workingQueue.isEmpty()) {
@@ -89,7 +91,7 @@ public class BFSVisit<V> {
                 workingQueue.clear();
             } else {
                 Collection<V> reachableVertices = graph.getReachableVertices(currVertex);
-                VertexBFSInfo<V> parentVertexInfo = visitedVertices.get(currVertex);
+                VertexDistanceInfo<V> parentVertexInfo = visitedVertices.get(currVertex);
 
                 // Check if we have reached to destination, to avoid of adding other neighbors.
                 if ((destination != null) && reachableVertices.contains(destination)) {
@@ -115,8 +117,8 @@ public class BFSVisit<V> {
      * @param workingQueue A queue to insert into when the vertex distance got updated with a shorter distance
      * @param visitedVertices Map of previously visited vertices, to get their info
      */
-    private void updateVisitedVertexIfNecessary(V vertex, V parentVertex, VertexBFSInfo<V> parentVertexInfo, Deque<V> workingQueue, Map<V, VertexBFSInfo<V>> visitedVertices) {
-        VertexBFSInfo<V> vertexInfo = visitedVertices.computeIfAbsent(vertex, VertexBFSInfo::new);
+    private void updateVisitedVertexIfNecessary(V vertex, V parentVertex, VertexDistanceInfo<V> parentVertexInfo, Deque<V> workingQueue, Map<V, VertexDistanceInfo<V>> visitedVertices) {
+        VertexDistanceInfo<V> vertexInfo = visitedVertices.computeIfAbsent(vertex, VertexDistanceInfo::new);
 
         // In case the path from parent is shorter than the computed one, keep the shorter path and add that
         // vertex to the queue so we will continue traversing until we reach destination.
@@ -133,39 +135,5 @@ public class BFSVisit<V> {
         if (vertexInfo.getDistance() == (parentVertexInfo.getDistance() + 1)) {
             vertexInfo.getParents().add(parentVertex);
         }
-    }
-
-    /**
-     * A type to return to the caller of {@link BFSVisit#traverse(IGraph)},
-     * to give the caller all information collected by BFS.
-     * @param <V> Type of a vertex in graph.
-     */
-    @RequiredArgsConstructor
-    @AllArgsConstructor
-    @ToString
-    public static class VertexBFSInfo<V> {
-        /**
-         * A vertex visited by the {@link BFSVisit#traverse(IGraph)} method.
-         */
-        @Getter
-        @NonNull
-        private final V vertex;
-
-        /**
-         * The distance of this vertex from the root of the graph, specified at
-         * {@link BFSVisit#traverse(IGraph)}.<br/>
-         * Default value is {@value Integer#MAX_VALUE}, indicates that a vertex is not reachable from root.
-         */
-        @Getter
-        @Setter(AccessLevel.PROTECTED)
-        private int distance = Integer.MAX_VALUE;
-
-        /**
-         * All parents of this vertex.<br/>
-         * There might be multiple shortest paths, hence there might be multiple parents.
-         */
-        @Getter
-        @Setter(AccessLevel.PROTECTED)
-        private Collection<V> parents = new ArrayList<>();
     }
 }

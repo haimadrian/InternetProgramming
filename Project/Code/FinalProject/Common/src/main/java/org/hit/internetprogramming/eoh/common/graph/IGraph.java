@@ -2,6 +2,7 @@ package org.hit.internetprogramming.eoh.common.graph;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import org.apache.commons.lang3.tuple.Pair;
 import org.hit.internetprogramming.eoh.common.mat.IMatrix;
 
 import java.util.List;
@@ -71,4 +72,34 @@ public interface IGraph<T> {
     * @see #printGraph()
     */
    String toString();
+
+   /**
+    * This method created in order to let the user know how many references this graph holds in memory.<br/>
+    * When the implementation is of a matrix, the result is ROWS*COLS. Otherwise, the result is V*E, where
+    * V is the amount of vertices, and E is the amount of edges.
+    * @return Size of this graph
+    */
+   int getGraphSize();
+
+   /**
+    * Get all vertices in this graph.<br/>
+    * This method can take {@link #getGraphSize()} operations in order to collect all vertices in the graph.
+    * @return All of the vertices in this graph
+    */
+   List<T> getVertices();
+
+   /**
+    * Get all edges in this graph.<br/>
+    * This method can take {@link #getGraphSize()}*4 operations in order to collect all edges in the graph.
+    * @return All of the edges in this graph
+    */
+   List<Pair<T, T>> getEdges();
+
+   /**
+    * Get the value of a vertex in this graph
+    * @param vertex The vertex to get its value
+    * @param <V> Type of the value of vertices in this graph
+    * @return Value of the specified vertex
+    */
+   <V> V getValue(T vertex);
 }
