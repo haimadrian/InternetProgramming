@@ -68,7 +68,7 @@ public enum ActionType {
     /**
      * Find all shortest paths, in a weighted graph, between a source vertex and destination vertex
      */
-    SHORTEST_PATHS_IN_WIGHTED_GRAPH,
+    SHORTEST_PATHS_IN_WEIGHTED_GRAPH,
 
     /**
      * Print graph to console
