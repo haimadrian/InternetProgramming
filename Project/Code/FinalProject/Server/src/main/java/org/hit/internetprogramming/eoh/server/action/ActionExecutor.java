@@ -34,6 +34,9 @@ public class ActionExecutor {
         actions.put(ActionType.GENERATE_RANDOM_BINARY_GRAPH_STANDARD, GenerateRandomGraph.class);
         actions.put(ActionType.GENERATE_RANDOM_BINARY_GRAPH_CROSS, GenerateRandomGraph.class);
         actions.put(ActionType.GENERATE_RANDOM_BINARY_GRAPH_REGULAR, GenerateRandomGraph.class);
+        actions.put(ActionType.GENERATE_RANDOM_GRAPH_STANDARD, GenerateRandomGraph.class);
+        actions.put(ActionType.GENERATE_RANDOM_GRAPH_CROSS, GenerateRandomGraph.class);
+        actions.put(ActionType.GENERATE_RANDOM_GRAPH_REGULAR, GenerateRandomGraph.class);
         actions.put(ActionType.GET_NEIGHBORS, GetVertices.class);
         actions.put(ActionType.GET_REACHABLES, GetVertices.class);
         actions.put(ActionType.CONNECTED_COMPONENTS, ConnectedComponents.class);

@@ -3,6 +3,7 @@ package org.hit.internetprogramming.eoh.server;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hit.internetprogramming.eoh.common.log.LoggingStream;
+import org.hit.internetprogramming.eoh.server.action.ActionThreadService;
 import org.hit.internetprogramming.eoh.server.common.TCPServer;
 import org.hit.internetprogramming.eoh.server.impl.MatrixClientHandler;
 
@@ -98,6 +99,9 @@ public class ServerMain {
         if (!wasShutDown.getAndSet(true)) {
             log.info("Shutting down InternetProgramming server");
             server.stop();
+
+            // Stop all actions if there are, as we have been instructed to shutdown.
+            ActionThreadService.getInstance().shutdownNow();
 
             if (trayIcon != null) {
                 SystemTray.getSystemTray().remove(trayIcon);
