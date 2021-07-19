@@ -10,6 +10,7 @@ ext {
     jacksonVer = '2.12.3'
     log4jVer = '2.13.3'
     disruptorVer = '3.4.2'
+    commonsLangVer = '3.12.0'
 }
 
 java {
@@ -28,6 +29,7 @@ dependencies {
     compile "com.fasterxml.jackson.core:jackson-databind:${jacksonVer}"
     compile "org.apache.logging.log4j:log4j-core:${log4jVer}"
     runtimeOnly "com.lmax:disruptor:${disruptorVer}" // Asynchronous logging
+    compile "org.apache.commons:commons-lang3:${commonsLangVer}" // For StringUtils, to format align string to middle
 
     testCompile "org.mockito:mockito-junit-jupiter:3.8.0"
     testCompile "org.junit.jupiter:junit-jupiter-api:5.7.1"

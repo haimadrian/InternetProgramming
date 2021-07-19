@@ -1,7 +1,10 @@
-package org.hit.internetprogramming.eoh.common.mat;
+package org.hit.internetprogramming.eoh.common.mat.impl;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.commons.lang3.StringUtils;
+import org.hit.internetprogramming.eoh.common.mat.IMatrix;
+import org.hit.internetprogramming.eoh.common.mat.Index;
 
 import java.util.Arrays;
 
@@ -12,7 +15,6 @@ import java.util.Arrays;
  * We also implement a pretty print of a matrix. See {@link #printMatrix()} and {@link #toString()}
  * @author Haim Adrian
  * @since 06-Mar-21
- * @see AbstractBinaryMatrix
  */
 abstract class AbstractMatrix<T> implements IMatrix<T> {
     @JsonProperty("data")
@@ -25,6 +27,19 @@ abstract class AbstractMatrix<T> implements IMatrix<T> {
      */
     public AbstractMatrix(int rows, int cols) {
         data = new Object[rows][cols];
+    }
+
+    /**
+     * Constructs a new {@link AbstractMatrix}, with source values.
+     * @param copyFrom Source to get values from
+     */
+    public AbstractMatrix(T[][] copyFrom) {
+        this(copyFrom.length, copyFrom[0].length);
+        for (int row = 0; row < copyFrom.length; row++) {
+            for (int col = 0; col < copyFrom[0].length; col++) {
+                setValue(Index.from(row, col), copyFrom[row][col]);
+            }
+        }
     }
 
     @JsonGetter("rows")
@@ -56,6 +71,11 @@ abstract class AbstractMatrix<T> implements IMatrix<T> {
         return (T)data[index.getRow()][index.getColumn()];
     }
 
+    @Override
+    public boolean hasValue(Index index) {
+        return isIndexValid(index) && (getValue(index) != null);
+    }
+
     /**
      * Helper method used to make sure a specified index is valid. (Differs from null, and inside matrix bounds.)
      * @param index The index to validate.
@@ -81,13 +101,36 @@ abstract class AbstractMatrix<T> implements IMatrix<T> {
 
     @Override
     public String printMatrix() {
-        String toString = toString();
-        return toString.substring(1, toString.length() - 1).replace(",", "");
+        StringBuilder sb = new StringBuilder();
+
+        // 1 space from right, to separate between values
+        int longestValue = findLongestValue() + 1;
+        String emptyCell = StringUtils.repeat(' ', longestValue);
+
+        for (Object[] currRow : data) {
+            if (sb.length() > 0) {
+                sb.append(System.lineSeparator());
+            }
+
+            for (Object currCell : currRow) {
+                String currCellAsString;
+                if (currCell != null) {
+                    currCellAsString = StringUtils.center(currCell.toString(), longestValue);
+                } else {
+                    currCellAsString = emptyCell;
+                }
+
+                sb.append(currCellAsString);
+            }
+        }
+
+        return sb.toString();
     }
 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder("[");
+
         for (Object[] currRow : data) {
             if (sb.length() > 1) {
                 sb.append(',').append(System.lineSeparator());
@@ -95,8 +138,28 @@ abstract class AbstractMatrix<T> implements IMatrix<T> {
 
             sb.append(Arrays.toString(currRow));
         }
+
         sb.append("]");
         return sb.toString();
+    }
+
+    /**
+     * In order to format a matrix that might have values longer than 1, we need to find the longest value so all
+     * values will have a fixed width.
+     * @return The length of the longest value in this matrix.
+     */
+    private int findLongestValue() {
+        int maxLength = 0;
+
+        for (Object[] currRow : data) {
+            for (Object currCell : currRow) {
+                if (currCell != null) {
+                    maxLength = Math.max(maxLength, currCell.toString().length());
+                }
+            }
+        }
+
+        return maxLength;
     }
 }
 
