@@ -91,7 +91,9 @@ public class ClientMain {
                     case SHORTEST_PATHS:
                         Index source = readIndex(scanner, "Please enter source index in tuple format. e.g. (0, 0)");
                         Index dest = readIndex(scanner, "Please enter destination index in tuple format. e.g. (2, 2)");
-                        executeRequest(new Request(ActionType.SHORTEST_PATHS, new TwoVerticesBody<>(source, dest)), false, new TypeReference<List<Collection<Index>>>() {});
+                        log.info("Enter algorithm to use (1=BFS, 2=Bellman-Ford)");
+                        ActionType actionType = readChoice(scanner, 1, 2) == 1 ? ActionType.SHORTEST_PATHS : ActionType.SHORTEST_PATHS_IN_WEIGHTED_GRAPH;
+                        executeRequest(new Request(actionType, new TwoVerticesBody<>(source, dest)), false, new TypeReference<List<Collection<Index>>>() {});
                         break;
                     case PRINT_GRAPH:
                         executeRequest(new Request(ActionType.PRINT_GRAPH), true, null);
@@ -150,18 +152,38 @@ public class ClientMain {
         Index dimension = readIndex(scanner, "Enter matrix dimension. e.g. (3, 3)");
         log.info("Enter matrix kind (1=Standard, 2=Cross , 3=Regular)");
         int matrixKind = readChoice(scanner, 1, MatrixType.values().length);
+        log.info("Select matrix content (1=Binary, 2=Any Integer)");
+        boolean isBinary = readChoice(scanner, 1, 2) == 1;
         IMatrix<Integer> matrix = MatrixType.values()[matrixKind - 1].newInstance(dimension.getRow(), dimension.getColumn());
+
+        // Minimum and maximum supported value for the selected matrix content.
+        int minBound, maxBound;
+        if (isBinary) {
+            minBound = 0;
+            maxBound = 1;
+        } else {
+            minBound = Integer.MIN_VALUE;
+            maxBound = Integer.MAX_VALUE;
+        }
 
         log.info("Enter matrix values, cell by cell. You have to enter 0 or 1 only, and you have chosen to create a matrix with " + (dimension.getRow() * dimension.getColumn()) + " elements");
         for (int i = 0; i < dimension.getRow(); i++) {
             for (int j = 0; j < dimension.getColumn(); j++) {
-                matrix.setValue(Index.from(i, j), readChoice(scanner, 0, 1));
+                Integer value = readChoice(scanner, minBound, maxBound);
+
+                // In case of binary matrix, convert 0 to null, so we will have an indication for not having a value
+                // at some index. (Cause 0 is a legal integer value)
+                if (isBinary && (value == 0)) {
+                    value = null;
+                }
+
+                matrix.setValue(Index.from(i, j), value);
             }
         }
 
         Index root;
         do {
-            root = readIndex(scanner, "Enter root vertex location. e.g. (0, 0). (A root must have value 1 and not 0)");
+            root = readIndex(scanner, "Enter root vertex location. e.g. (0, 0). (A root must have a value. e.g. 1 in binary matrix)");
         } while (!matrix.hasValue(root));
 
         IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, root);
@@ -176,17 +198,19 @@ public class ClientMain {
         Index dimension = readIndex(scanner, "Enter matrix dimension. e.g. (3, 3)");
         log.info("Enter matrix kind (1=Standard, 2=Cross , 3=Regular)");
         int matrixKind = readChoice(scanner, 1, MatrixType.values().length);
+        log.info("Select matrix content (1=Binary, 2=Any Integer)");
+        boolean isBinary = readChoice(scanner, 1, 2) == 1;
 
         ActionType actionType;
         switch (MatrixType.values()[matrixKind - 1]) {
             case STANDARD:
-                actionType = ActionType.GENERATE_RANDOM_GRAPH_STANDARD;
+                actionType = isBinary ? ActionType.GENERATE_RANDOM_BINARY_GRAPH_STANDARD : ActionType.GENERATE_RANDOM_GRAPH_STANDARD;
                 break;
             case CROSS:
-                actionType = ActionType.GENERATE_RANDOM_GRAPH_CROSS;
+                actionType = isBinary ? ActionType.GENERATE_RANDOM_BINARY_GRAPH_CROSS : ActionType.GENERATE_RANDOM_GRAPH_CROSS;
                 break;
             default:
-                actionType = ActionType.GENERATE_RANDOM_GRAPH_REGULAR;
+                actionType = isBinary ? ActionType.GENERATE_RANDOM_BINARY_GRAPH_REGULAR : ActionType.GENERATE_RANDOM_GRAPH_REGULAR;
                 break;
         }
 

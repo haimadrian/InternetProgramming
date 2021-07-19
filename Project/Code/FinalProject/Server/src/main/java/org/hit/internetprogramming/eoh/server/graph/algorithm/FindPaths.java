@@ -2,6 +2,7 @@ package org.hit.internetprogramming.eoh.server.graph.algorithm;
 
 import lombok.RequiredArgsConstructor;
 import org.hit.internetprogramming.eoh.common.graph.IGraph;
+import org.hit.internetprogramming.eoh.server.common.exception.InputTooLargeException;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -22,28 +23,58 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class FindPaths<T> {
     /**
+     * Exercise two is limited to accept matrices of size 50x50 maximum, hence we hold this constant
+     * so we can compare it against {@link IGraph#getGraphSize()}, and throw exception when size of the graph
+     * exceeds 50x50.
+     */
+    private static final int MAXIMUM_SIZE_OF_GRAPH_FOR_BFS = 50*50;
+
+    /**
      * A graph to find paths in
      */
     private final IGraph<T> graph;
 
     /**
+     * Algorithms are lazily initialized. Those can be {@link BFSVisit} or {@link BellmanFord}
      * {@link BFSVisit} is lazily initialized at {@link #findShortestPaths(Object)}.
      */
-    private BFSVisit<T> bfsAlgorithm;
+    private final Map<ShortestPathAlgorithm.Algorithm, ShortestPathAlgorithm<T>> algorithms = new HashMap<>();
 
     /**
      * Find all shortest paths in the specified graph (passed to this {@link FindPaths}) between {@code root} and {@code to}.
      * @param to The vertex to get to.
      * @return Collection of all paths to destination vertex, or empty if we could not reach to destination.
+     * @throws InputTooLargeException When input graph (matrix) is larger than 50x50
      */
-    public List<Collection<T>> findShortestPaths(T to) {
-        List<Collection<T>> paths = new ArrayList<>();
-
-        if (bfsAlgorithm == null) {
-            bfsAlgorithm = new BFSVisit<>();
+    public List<Collection<T>> findShortestPaths(T to) throws InputTooLargeException {
+        // Make sure input does not exceed 50x50, according to the assignment demand.
+        if (graph.getGraphSize() > MAXIMUM_SIZE_OF_GRAPH_FOR_BFS) {
+            throw new InputTooLargeException("Input graph is too large! Maximum size is: 50x50");
         }
 
-        Map<T, BFSVisit.VertexBFSInfo<T>> visitedVertices = bfsAlgorithm.traverse(graph, to);
+        List<Collection<T>> paths = new ArrayList<>();
+
+        ShortestPathAlgorithm<T> bfsAlgorithm = algorithms.computeIfAbsent(ShortestPathAlgorithm.Algorithm.BFS, algo -> new BFSVisit<>());
+        Map<T, VertexDistanceInfo<T>> visitedVertices = bfsAlgorithm.traverse(graph, to);
+
+        // It might be that destination was not reachable. So don't find paths in case destination wasn't reachable.
+        if (visitedVertices.containsKey(to)) {
+            findShortestPaths(to, new LinkedList<>(), paths, visitedVertices);
+        }
+
+        return paths;
+    }
+
+    /**
+     * Find all shortest paths in the specified weighted graph (passed to this {@link FindPaths}) between {@code root} and {@code to}.
+     * @param to The vertex to get to.
+     * @return Collection of all paths to destination vertex, or empty if we could not reach to destination.
+     */
+    public List<Collection<T>> findShortestPathsInWeightedGraph(T to) {
+        List<Collection<T>> paths = new ArrayList<>();
+
+        ShortestPathAlgorithm<T> bellmanFordAlgorithm = algorithms.computeIfAbsent(ShortestPathAlgorithm.Algorithm.BELLMAN_FORD, algo -> new BellmanFord<>());
+        Map<T, VertexDistanceInfo<T>> visitedVertices = bellmanFordAlgorithm.traverse(graph, to);
 
         // It might be that destination was not reachable. So don't find paths in case destination wasn't reachable.
         if (visitedVertices.containsKey(to)) {
@@ -54,10 +85,10 @@ public class FindPaths<T> {
     }
 
     @SuppressWarnings("unchecked")
-    private void findShortestPaths(T currentVertex, LinkedList<T> currentPath, List<Collection<T>> paths, Map<T, BFSVisit.VertexBFSInfo<T>> visitedVertices) {
+    private void findShortestPaths(T currentVertex, LinkedList<T> currentPath, List<Collection<T>> paths, Map<T, VertexDistanceInfo<T>> visitedVertices) {
         // Add current vertex as first vertex in the path, cause we traverse from leaves to root.
         currentPath.addFirst(currentVertex);
-        BFSVisit.VertexBFSInfo<T> currentVertexInfo = visitedVertices.get(currentVertex);
+        VertexDistanceInfo<T> currentVertexInfo = visitedVertices.get(currentVertex);
 
         // Base case - no parents means a root.
         if (currentVertexInfo.getParents().isEmpty()) {

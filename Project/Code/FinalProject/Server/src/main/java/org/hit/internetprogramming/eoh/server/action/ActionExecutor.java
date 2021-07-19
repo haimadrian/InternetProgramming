@@ -31,6 +31,9 @@ public class ActionExecutor {
         actions = new HashMap<>();
         actions.put(ActionType.PUT_GRAPH, PutGraph.class);
         actions.put(ActionType.GET_GRAPH, GetGraph.class);
+        actions.put(ActionType.GENERATE_RANDOM_BINARY_GRAPH_STANDARD, GenerateRandomGraph.class);
+        actions.put(ActionType.GENERATE_RANDOM_BINARY_GRAPH_CROSS, GenerateRandomGraph.class);
+        actions.put(ActionType.GENERATE_RANDOM_BINARY_GRAPH_REGULAR, GenerateRandomGraph.class);
         actions.put(ActionType.GENERATE_RANDOM_GRAPH_STANDARD, GenerateRandomGraph.class);
         actions.put(ActionType.GENERATE_RANDOM_GRAPH_CROSS, GenerateRandomGraph.class);
         actions.put(ActionType.GENERATE_RANDOM_GRAPH_REGULAR, GenerateRandomGraph.class);
@@ -38,6 +41,7 @@ public class ActionExecutor {
         actions.put(ActionType.GET_REACHABLES, GetVertices.class);
         actions.put(ActionType.CONNECTED_COMPONENTS, FindConnectedComponents.class);
         actions.put(ActionType.SHORTEST_PATHS, FindShortestPaths.class);
+        actions.put(ActionType.SHORTEST_PATHS_IN_WEIGHTED_GRAPH, FindShortestPathsInWeightedGraph.class);
         actions.put(ActionType.PRINT_GRAPH, PrintGraph.class);
     }
 
