@@ -102,4 +102,12 @@ public interface IGraph<T> {
     * @return Value of the specified vertex
     */
    <V> V getValue(T vertex);
+
+   /**
+    * Tests if a given vertex belongs to this graph. We need to test if vertices are part of a graph when
+    * looking for submarines.
+    * @param vertex The vertex to check if it belongs to this graph
+    * @return Whether vertex belongs to this graph or not
+    */
+   boolean contains(T vertex);
 }

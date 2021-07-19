@@ -122,6 +122,11 @@ public class MatrixGraphAdapter<T> implements IGraph<Index> {
       return edges;
    }
 
+   @Override
+   public boolean contains(Index vertex) {
+      return matrix.hasValue(vertex);
+   }
+
    @SuppressWarnings("unchecked")
    @Override
    public T getValue(Index vertex) {
