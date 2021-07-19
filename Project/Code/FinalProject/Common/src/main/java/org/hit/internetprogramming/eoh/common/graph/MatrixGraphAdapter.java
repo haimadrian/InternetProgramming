@@ -81,6 +81,11 @@ public class MatrixGraphAdapter<T> implements IGraph<Index> {
    }
 
    @Override
+   public boolean contains(Index vertex) {
+      return matrix.hasValue(vertex);
+   }
+
+   @Override
    public String toString() {
       return matrix.toString().replace("0", " ");
    }

@@ -58,6 +58,13 @@ public interface IGraph<T> {
    String printGraph();
 
    /**
+    * Checks if some vertex belongs to this graph.
+    * @param vertex The index to check if there is value at
+    * @return Whether the specified vertex belongs to this graph or not.
+    */
+   boolean contains(T vertex);
+
+   /**
     * Get a string representing this graph.<br/>
     * The string will be formatted as a matrix, where all 0's are replaced with space, and you see 1's only.<br/>
     * For example:
