@@ -62,7 +62,7 @@ public class GraphWebService {
             log.info("Connecting to server at: " + ip + ":" + port);
 
             clientSocket = new Socket(ip, port);
-            clientSocket.setSoTimeout((int) TimeUnit.SECONDS.toMillis(2));
+            clientSocket.setSoTimeout((int) TimeUnit.SECONDS.toMillis(30));
             inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             outToServer = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
         } catch (Exception e) {

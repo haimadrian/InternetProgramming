@@ -1,27 +1,31 @@
 package org.hit.internetprogramming.eoh.server.action.impl;
 
+import lombok.extern.log4j.Log4j2;
 import org.hit.internetprogramming.eoh.common.comms.HttpStatus;
 import org.hit.internetprogramming.eoh.common.comms.Response;
 import org.hit.internetprogramming.eoh.common.graph.IGraph;
+import org.hit.internetprogramming.eoh.common.graph.MatrixGraphAdapter;
 import org.hit.internetprogramming.eoh.common.mat.Index;
 import org.hit.internetprogramming.eoh.server.action.Action;
 import org.hit.internetprogramming.eoh.server.action.ActionContext;
-import org.hit.internetprogramming.eoh.server.graph.algorithm.ConnectedComponents;
+import org.hit.internetprogramming.eoh.server.action.ActionThreadService;
 import org.hit.internetprogramming.eoh.server.graph.algorithm.DFSVisit;
 import org.hit.internetprogramming.eoh.server.impl.Graphs;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.*;
+import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * A class for receiving all the connected components in a graph.<br/>
  * The graph is represented by a matrix.
+ *
  * @author Orel Gershonovich
- * @since   9-July-21
  * @see DFSVisit
+ * @since 9-July-21
  */
+@Log4j2
 public class FindConnectedComponents implements Action {
 
     @Override
@@ -31,23 +35,35 @@ public class FindConnectedComponents implements Action {
             return Response.error(HttpStatus.NOT_FOUND.getCode(), "No graph was initialized. Please put graph or generate one", actionContext.getRequest().isHttp());
         }
 
-        ConnectedComponents<Index> connectedComponents = new ConnectedComponents<>();
+        List<Set<Index>> finalListWithAllCCAsSet = new ArrayList<>();
+        List<Index> unVisitedVertices = graph.getVertices();
+        List<Callable<Void>> tasks = new ArrayList<>();
+        DFSVisit<Index> dfsVisit = new DFSVisit<>();
+        Set<Set<Index>> allCC = new HashSet<>();
+        Lock lock = new ReentrantLock();
+        for (Index currentSource : unVisitedVertices) {
+            tasks.add(() -> {
+                HashSet<Index> connectedComponent;
+                lock.lock();
+                try {
+                    connectedComponent = new HashSet<>(dfsVisit.traverse(new MatrixGraphAdapter<>(graph, currentSource)));
+                    allCC.add(connectedComponent);
+                } finally {
+                    lock.unlock();
+                }
 
-        ExecutorService es = Executors.newFixedThreadPool(3);
-
-        Callable<List<Set<Index>>> connectedComponentsItems = () -> connectedComponents.traverse(graph);
-
-        FutureTask<List<Set<Index>>> listOfConnectedComponents = (FutureTask<List<Set<Index>>>) es.submit(connectedComponentsItems);
-        List<Set<Index>> response = null;
-        try {
-            response = listOfConnectedComponents.get();
-        } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
+                log.debug(() -> Thread.currentThread().getName() + " collected connected component: " + connectedComponent);
+                return null;
+            });
         }
 
-        //FutureTask<Set<Index>> connectedComponentsItems = new Callable<>()
-        //List<Set<Index>> connectedComponentsItems = connectedComponents.traverse(graph);
-
-        return Response.ok(HttpStatus.OK.getCode(), response, actionContext.getRequest().isHttp());
+        try {
+            ActionThreadService.getInstance().invokeAll(tasks);
+            finalListWithAllCCAsSet.addAll(allCC);
+            finalListWithAllCCAsSet.sort(Comparator.comparingInt(Set::size));
+        } catch (InterruptedException e) {
+            log.error("Failed to collect connected components", e);
+        }
+        return Response.ok(HttpStatus.OK.getCode(), finalListWithAllCCAsSet, actionContext.getRequest().isHttp());
     }
 }

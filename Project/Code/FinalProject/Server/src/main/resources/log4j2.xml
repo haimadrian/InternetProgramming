@@ -56,9 +56,10 @@
         <Logger name="stderr" level="debug" additivity="false">
             <AppenderRef ref="ConsoleErr"/> <!-- See logs in console when running from intellij -->
         </Logger>
-        <Root level="info">
+        <Root level="debug">
             <AppenderRef ref="ConsoleOut"/>
             <AppenderRef ref="ConsoleErr"/>
+            <AppenderRef ref="mainLog"/>
         </Root>
     </Loggers>
 </Configuration>
