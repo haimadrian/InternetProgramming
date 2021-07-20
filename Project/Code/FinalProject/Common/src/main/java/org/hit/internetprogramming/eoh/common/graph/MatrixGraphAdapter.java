@@ -2,6 +2,7 @@ package org.hit.internetprogramming.eoh.common.graph;
 
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -25,11 +26,13 @@ public class MatrixGraphAdapter<T> implements IGraph<Index> {
    /**
     * The underlying matrix, which will adapt the Graph API.
     */
+   @JsonProperty
    private final IMatrix<T> matrix;
 
    /**
     * Root of the graph. Must be a valid {@link Index} at the specified matrix.
     */
+   @JsonProperty
    private final Index root;
 
    /**
@@ -88,11 +91,13 @@ public class MatrixGraphAdapter<T> implements IGraph<Index> {
    }
 
    @Override
+   @JsonIgnore
    public int getGraphSize() {
       return matrix.rows() * matrix.cols();
    }
 
    @Override
+   @JsonIgnore
    public List<Index> getVertices() {
       List<Index> vertices = new ArrayList<>();
 
@@ -109,6 +114,7 @@ public class MatrixGraphAdapter<T> implements IGraph<Index> {
    }
 
    @Override
+   @JsonIgnore
    public List<Pair<Index, Index>> getEdges() {
       List<Index> vertices = getVertices();
       List<Pair<Index, Index>> edges = new ArrayList<>(vertices.size());

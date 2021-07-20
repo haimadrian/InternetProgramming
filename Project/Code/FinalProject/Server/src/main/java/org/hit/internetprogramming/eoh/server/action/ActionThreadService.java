@@ -5,6 +5,7 @@ import lombok.Getter;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Thread service to be used by graph algorithms that we run in the server.<br/>
@@ -21,11 +22,23 @@ public class ActionThreadService implements ExecutorService {
     @Getter
     private final int amountOfWorkers;
 
+    /**
+     * Use an atomic counter so we can count threads (action workers) and give them meaningful name.
+     */
+    private final AtomicInteger workerThreadIdCounter;
+
     private ActionThreadService() {
         amountOfWorkers = Runtime.getRuntime().availableProcessors() * THREADS_PER_PROCESSOR;
+        workerThreadIdCounter = new AtomicInteger();
 
         // Create a new cached thread pool, but use bounded max pool size, so we will not create too many threads.
-        threadPool = new ThreadPoolExecutor(amountOfWorkers, amountOfWorkers, 60L, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
+        threadPool = new ThreadPoolExecutor(amountOfWorkers, amountOfWorkers, 60L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), this::workerThreadFactory);
+    }
+
+    private Thread workerThreadFactory(Runnable r) {
+        Thread t = Executors.defaultThreadFactory().newThread(r);
+        t.setName("ActionWorker-" + workerThreadIdCounter.incrementAndGet());
+        return t;
     }
 
     /**

@@ -28,6 +28,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.Collection;
 import java.util.List;
 import java.util.Scanner;
+import java.util.Set;
 
 /**
  * @author Haim Adrian
@@ -85,7 +86,7 @@ public class ClientMain {
                         executeRequest(new Request(choice.getActionType(), index), false, new TypeReference<List<Index>>() {});
                         break;
                     case CONNECTED_COMPONENTS:
-                        executeRequest(new Request(ActionType.CONNECTED_COMPONENTS), false, new TypeReference<List<Index>>() {});
+                        executeRequest(new Request(ActionType.CONNECTED_COMPONENTS), false, new TypeReference<List<Set<Index>>>() {});
                         break;
                     case SHORTEST_PATHS:
                         Index source = readIndex(scanner, "Please enter source index in tuple format. e.g. (0, 0)");
@@ -103,6 +104,8 @@ public class ClientMain {
                         log.info("Good bye!");
                 }
             } while (isRunning);
+        } catch (Exception e) {
+            log.error(e, e);
         }
     }
 
