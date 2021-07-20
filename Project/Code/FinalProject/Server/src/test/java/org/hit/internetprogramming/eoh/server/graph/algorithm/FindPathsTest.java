@@ -10,6 +10,7 @@ import org.hit.internetprogramming.eoh.common.mat.impl.StandardMatrix;
 import org.hit.internetprogramming.eoh.server.common.exception.InputTooLargeException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.opentest4j.AssertionFailedError;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -21,7 +22,14 @@ import java.util.stream.Collectors;
 public class FindPathsTest {
 
     private static void pathsValidation(Collection<? extends Collection<Index>> expectedPaths, Collection<Collection<Index>> actualPaths) {
-        Assertions.assertEquals(expectedPaths.size(), actualPaths.size(), "Wrong amount of paths");
+        try {
+            Assertions.assertEquals(expectedPaths.size(), actualPaths.size(), "Wrong amount of paths");
+        } catch (AssertionFailedError e) {
+            System.out.println("Expected: " + expectedPaths);
+            System.out.println("Actual: " + actualPaths);
+            throw e;
+        }
+
         for (Collection<Index> expectedPath : expectedPaths) {
             Assertions.assertTrue(actualPaths.contains(expectedPath), "Missing path: " + System.lineSeparator() +
                     expectedPath + System.lineSeparator() +
@@ -688,6 +696,149 @@ public class FindPathsTest {
         // Act
         FindPaths<Index> findPaths = new FindPaths<>(graph);
         Collection<Collection<Index>> paths = findPaths.findShortestPathsInWeightedGraph(Index.from(1, 2));
+
+        // Assert
+        pathsValidation(expectedPaths, paths);
+    }
+
+    @Test
+    public void testFindShortestPaths_useWeightedGraph_findShortestPathWithNegativeWeight() {
+        // Arrange
+        //@formatter:off
+        Integer[][] mat = {{100, 100, 100},
+                           {500, -100, 300}};
+        //@formatter:on
+        IMatrix<Integer> matrix = new StandardMatrix<>(mat);
+        IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(1, 0));
+
+        List<List<Index>> expectedPaths = new ArrayList<>(1);
+        expectedPaths.add(Arrays.asList(Index.from(1, 0), Index.from(1, 1), Index.from(1, 2)));
+
+        // Act
+        FindPaths<Index> findPaths = new FindPaths<>(graph);
+        Collection<Collection<Index>> paths = findPaths.findShortestPathsInWeightedGraph(Index.from(1, 2));
+
+        // Assert
+        pathsValidation(expectedPaths, paths);
+    }
+
+    @Test
+    public void testFindShortestPaths_useWeightedGraph_findShortestPathBigGraph() {
+        // Arrange
+        //@formatter:off
+        Integer[][] mat = {{100,  100, 100,  100, 300, -200,  300, 100},
+                           {500, -100, 900,  100, 300,  300,  300, 300},
+                           {500,  200, 300,  100, 100,  100,  100, 300},
+                           {500,  100, 300,  900, 100,  100,  100, 300},
+                           {500, -100, 300, -100, 900,  100,  100, 300},
+                           {500,  200, 900,  100, 900,  100,  100, 300},
+                           {500,  100, 900,  100, 100,  100, -100, 300},
+                           {500, -100, 900,  200, 200,  100,  100, 300}};
+        //@formatter:on
+        IMatrix<Integer> matrix = new StandardMatrix<>(mat);
+        IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(1, 0));
+
+        List<List<Index>> expectedPaths = new ArrayList<>(1);
+        expectedPaths.add(Arrays.asList(Index.from(1, 0), Index.from(1, 1),
+                Index.from(2, 1),
+                Index.from(3, 1),
+                Index.from(4, 1), Index.from(4, 2), Index.from(4, 3),
+                Index.from(5, 3),
+                Index.from(6, 3), Index.from(6, 4), Index.from(6, 5), Index.from(6, 6),
+                Index.from(7, 6), Index.from(7, 7)));
+
+        // Act
+        FindPaths<Index> findPaths = new FindPaths<>(graph);
+        Collection<Collection<Index>> paths = findPaths.findShortestPathsInWeightedGraph(Index.from(7, 7));
+
+        // Assert
+        pathsValidation(expectedPaths, paths);
+    }
+
+    @Test
+    public void testFindShortestPaths_useWeightedGraph_find2ShortestPaths() {
+        // Arrange
+        //@formatter:off
+        Integer[][] mat = {{100,  100, 100,  100, 300, -200, 300, 100},
+                           {500, -100, 900,  100, 300,  300, 300, 300},
+                           {500,  200, 300,  100, 100,  100, 100, 300},
+                           {500,  100, 300,  900, 100,  100, 100, 300},
+                           {500, -100, 300, -100, 900,  100, 100, 300},
+                           {500,  200, 900,  100, 900,  100, 100, 300},
+                           {500,  100, 900,  100, 100,  100, 100, 300},
+                           {500, -100, 900,  200, 200,  100, 100, 300}};
+        //@formatter:on
+        IMatrix<Integer> matrix = new StandardMatrix<>(mat);
+        IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(1, 0));
+
+        List<List<Index>> expectedPaths = new ArrayList<>(1);
+        expectedPaths.add(Arrays.asList(Index.from(1, 0), Index.from(1, 1),
+                Index.from(2, 1),
+                Index.from(3, 1),
+                Index.from(4, 1), Index.from(4, 2), Index.from(4, 3),
+                Index.from(5, 3),
+                Index.from(6, 3), Index.from(6, 4), Index.from(6, 5), Index.from(6, 6),
+                Index.from(7, 6), Index.from(7, 7)));
+        expectedPaths.add(Arrays.asList(Index.from(1, 0), Index.from(1, 1),
+                Index.from(2, 1),
+                Index.from(3, 1),
+                Index.from(4, 1), Index.from(4, 2), Index.from(4, 3),
+                Index.from(5, 3),
+                Index.from(6, 3), Index.from(6, 4), Index.from(6, 5),
+                Index.from(7, 5), Index.from(7, 6), Index.from(7, 7)));
+
+        // Act
+        FindPaths<Index> findPaths = new FindPaths<>(graph);
+        Collection<Collection<Index>> paths = findPaths.findShortestPathsInWeightedGraph(Index.from(7, 7));
+
+        // Assert
+        pathsValidation(expectedPaths, paths);
+    }
+
+    @Test
+    public void testFindShortestPaths_useWeightedGraph_findShortestPathParallel() {
+        // Arrange
+        //@formatter:off
+        Integer[][] mat = {{100,  100, 100,  100, 300, -200,  300, 100, 500, 500, 500, 500, 500, 500, 500, 500, 500},
+                           {500, -100, 900,  100, 300,  300,  300, 300, 500, 500, 500, 500, 500, 500, 500, 500, 500},
+                           {500,  200, 300,  100, 200,  200,  100, 300, 500, 500, 500, 500, 500, 500, 500, 500, 500},
+                           {500,  100, 300,  900, 100,  200,  100, 300, 500, 500, 500, 500, 500, 500, 500, 500, 500},
+                           {500, -100, 300, -100, 900,  100,  100, 300, 500, 500, 500, 500, 500, 500, 500, 500, 500},
+                           {500,  200, 900,  100, 900,  100,  500, 300, 500, 500, 500, 500, 500, 500, 500, 500, 500},
+                           {500,  100, 900,  100, 100,  100, -100, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500},
+                           {500, -100, 900,  200, 200,  200,  100, 300, 500, 500, 500, 500, 500, 500, 500, 500, 500},
+                           {500,  500, 900,  500, 500,  500,  500, 300, 500, 500, 500, 500, 500, 500, 500, 500, 500},
+                           {600,  600, 1000,  500, 500,  500,  500, 300, 500, 500, 500, 500, 500, 500, 500, 500, 500},
+                           {700,  500, 900,  500, 500,  500,  500, 300, 500, 500, 500, 500, 500, 500, 500, 500, 500},
+                           {800,  400, 900,  500, 500,  500,  500, 300, 500, 500, 500, 500, 500, 500, 500, 500, 500},
+                           {900,  500, 900,  500, 500,  500,  500, 300, 500, 500, 500, 500, 500, 500, 500, 500, 500},
+                           {500,  500, 900,  500, 500,  500,  500, 300, 500, 500, 500, 500, 500, 500, 500, 500, 500},
+                           {600,  500, 900,  500, 500,  500,  500, 300, 500, 500, 500, 500, 500, 500, 500, 500, 500},
+                           {700,  500, 900,  500, 500,  500,  500, 300, 500, 500, 500, 500, 500, 500, 500, 500, 500},
+                           {800,  500, 900,  500, 500,  500,  500, 300, 500, 500, 500, 500, 500, 500, 500, 500, 500},
+                           {900,  500, 900,  500, 500,  500,  500, 300, 500, 500, 500, 500, 500, 500, 500, 500, 500},
+                           {500,  500, 900,  500, 500,  500,  500, 300, 500, 500, 500, 500, 500, 500, 500, 500, 500},
+                           {600,  500, 900,  500, 500,  500,  500, 300, 500, 500, 500, 500, 500, 500, 500, 500, 500},
+                           {700,  500, 900,  500, 500,  500,  500, 300, 500, 500, 500, 500, 500, 500, 500, 500, 500},
+                           {500,  500, 900,  500, 500,  500,  500, 300, 500, 500, 500, 500, 500, 500, 500, 500, 500},
+                           {20000,  500, 900,  500, 500,  500,  500, 300, 500, 500, 500, 500, 500, 500, 500, 500, 500},
+                           {30000,  50000, 20000,  50000, 500,  500,  500, 300, 500, 500, 500, 500, 500, 500, 500, 500, 500}};
+        //@formatter:on
+        IMatrix<Integer> matrix = new StandardMatrix<>(mat);
+        IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(1, 0));
+
+        List<List<Index>> expectedPaths = new ArrayList<>(1);
+        expectedPaths.add(Arrays.asList(Index.from(1, 0), Index.from(1, 1),
+                Index.from(2, 1),
+                Index.from(3, 1),
+                Index.from(4, 1), Index.from(4, 2), Index.from(4, 3),
+                Index.from(5, 3),
+                Index.from(6, 3), Index.from(6, 4), Index.from(6, 5), Index.from(6, 6),
+                Index.from(7, 6), Index.from(7, 7)));
+
+        // Act
+        FindPaths<Index> findPaths = new FindPaths<>(graph);
+        Collection<Collection<Index>> paths = findPaths.findShortestPathsInWeightedGraph(Index.from(7, 7));
 
         // Assert
         pathsValidation(expectedPaths, paths);

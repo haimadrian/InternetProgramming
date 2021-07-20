@@ -59,7 +59,7 @@ public class FindPaths<T> {
 
         // It might be that destination was not reachable. So don't find paths in case destination wasn't reachable.
         if (visitedVertices.containsKey(to)) {
-            findShortestPaths(to, new LinkedList<>(), paths, visitedVertices);
+            findShortestPaths(to, new LinkedList<>(), new HashSet<>(), paths, visitedVertices);
         }
 
         return paths;
@@ -78,16 +78,22 @@ public class FindPaths<T> {
 
         // It might be that destination was not reachable. So don't find paths in case destination wasn't reachable.
         if (visitedVertices.containsKey(to)) {
-            findShortestPaths(to, new LinkedList<>(), paths, visitedVertices);
+            findShortestPaths(to, new LinkedList<>(), new HashSet<>(), paths, visitedVertices);
         }
 
         return paths;
     }
 
     @SuppressWarnings("unchecked")
-    private void findShortestPaths(T currentVertex, LinkedList<T> currentPath, List<Collection<T>> paths, Map<T, VertexDistanceInfo<T>> visitedVertices) {
+    private void findShortestPaths(T currentVertex, LinkedList<T> currentPath, Set<T> currentPathBackedBy, List<Collection<T>> paths, Map<T, VertexDistanceInfo<T>> visitedVertices) {
+        // In case of cycle, exit.
+        if (currentPathBackedBy.contains(currentVertex)) {
+            return;
+        }
+
         // Add current vertex as first vertex in the path, cause we traverse from leaves to root.
         currentPath.addFirst(currentVertex);
+        currentPathBackedBy.add(currentVertex);
         VertexDistanceInfo<T> currentVertexInfo = visitedVertices.get(currentVertex);
 
         // Base case - no parents means a root.
@@ -97,13 +103,14 @@ public class FindPaths<T> {
         } else {
             // Go over all parents and call the method recursively, so we will add all paths. (a different path for each parent)
             for (T parent : currentVertexInfo.getParents()) {
-                findShortestPaths(parent, currentPath, paths, visitedVertices);
+                findShortestPaths(parent, currentPath, currentPathBackedBy, paths, visitedVertices);
             }
         }
 
         // Remove current vertex that we have inserted at the beginning of this method, so we will not affect
         // other recursive paths.
         currentPath.removeFirst();
+        currentPathBackedBy.remove(currentVertex);
     }
 
     /**

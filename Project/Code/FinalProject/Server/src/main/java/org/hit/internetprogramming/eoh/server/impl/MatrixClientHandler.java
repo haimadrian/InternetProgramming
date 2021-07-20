@@ -7,6 +7,7 @@ import org.hit.internetprogramming.eoh.common.action.ActionType;
 import org.hit.internetprogramming.eoh.common.comms.HttpStatus;
 import org.hit.internetprogramming.eoh.common.comms.Request;
 import org.hit.internetprogramming.eoh.common.comms.Response;
+import org.hit.internetprogramming.eoh.common.comms.TwoVerticesBody;
 import org.hit.internetprogramming.eoh.common.mat.Index;
 import org.hit.internetprogramming.eoh.common.util.JsonUtils;
 import org.hit.internetprogramming.eoh.server.action.ActionExecutor;
@@ -42,6 +43,11 @@ public class MatrixClientHandler implements RequestHandler {
     public static final String GENERATE_GRAPH_CROSS_PATH = "graph/generate/cross";
 
     /**
+     * Support generating a random graph, using HTTP GET request. e.g. GET localhost:1234/graph/generate/regular?row=3&col=3
+     */
+    public static final String GENERATE_GRAPH_REGULAR_PATH = "graph/generate/regular";
+
+    /**
      * Support GETting reachable vertices of a graph, using HTTP GET request. e.g. GET localhost:1234/graph/reachables?row=1&col=2
      */
     public static final String REACHABLES_PATH = "graph/reachables";
@@ -55,6 +61,16 @@ public class MatrixClientHandler implements RequestHandler {
      * Support GETting a graph as string, using HTTP GET request. e.g. GET localhost:1234/graph/print
      */
     public static final String PRINT_PATH = "graph/print";
+
+    /**
+     * Support GETting connected components in a graph, using HTTP GET request. e.g. GET localhost:1234/graph/algo/connectedcomponents
+     */
+    public static final String CONNECTED_COMPONENTS_PATH = "graph/algo/connectedcomponents";
+
+    /**
+     * Support GETting shortest paths in a graph, using HTTP GET request. e.g. GET localhost:1234/graph/algo/shortestpaths?srcrow=1&srccol=0&destrow=1&destcol=4
+     */
+    public static final String SHORTEST_PATHS_PATH = "graph/algo/shortestpaths";
 
     /**
      * Support disconnecting a user, using HTTP GET request. e.g. GET localhost:1234/disconnect
@@ -202,6 +218,8 @@ public class MatrixClientHandler implements RequestHandler {
             request = new Request(ActionType.GENERATE_RANDOM_BINARY_GRAPH_STANDARD, fetchIndexFromQuery(httpPathLower, false), true);
         } else if (httpPathLower.contains(GENERATE_GRAPH_CROSS_PATH)) {
             request = new Request(ActionType.GENERATE_RANDOM_BINARY_GRAPH_CROSS, fetchIndexFromQuery(httpPathLower, false), true);
+        }  else if (httpPathLower.contains(GENERATE_GRAPH_REGULAR_PATH)) {
+            request = new Request(ActionType.GENERATE_RANDOM_BINARY_GRAPH_REGULAR, fetchIndexFromQuery(httpPathLower, false), true);
         }  else if (httpPathLower.contains(NEIGHBORS_PATH)) {
             request = new Request(ActionType.GET_NEIGHBORS, fetchIndexFromQuery(httpPathLower, true), true);
         } else if (httpPathLower.contains(REACHABLES_PATH)) {
@@ -210,7 +228,13 @@ public class MatrixClientHandler implements RequestHandler {
             request = new Request(ActionType.DISCONNECT, null, true);
         } else if (httpPathLower.contains(PRINT_PATH)) {
             request = new Request(ActionType.PRINT_GRAPH, null, true);
-        } else {
+        } else if (httpPathLower.contains(CONNECTED_COMPONENTS_PATH)) {
+            request = new Request(ActionType.CONNECTED_COMPONENTS, null, true);
+        }  else if (httpPathLower.contains(SHORTEST_PATHS_PATH)) {
+            request = new Request(ActionType.SHORTEST_PATHS, new TwoVerticesBody<>(
+                    fetchIndexFromQuery(httpPathLower, false, "srcrow", "srccol"),
+                    fetchIndexFromQuery(httpPathLower, false, "destrow", "destcol")), true);
+        }  else {
             throw new WebException(HttpStatus.NOT_FOUND, "No handler for: " + httpPath);
         }
 
@@ -218,6 +242,10 @@ public class MatrixClientHandler implements RequestHandler {
     }
 
     private Index fetchIndexFromQuery(String httpPath, boolean isMandatory) throws WebException {
+        return fetchIndexFromQuery(httpPath, isMandatory, ROW_QUERY_PARAM, COL_QUERY_PARAM);
+    }
+
+    private Index fetchIndexFromQuery(String httpPath, boolean isMandatory, String rowParamName, String colParamName) throws WebException {
         String[] queryParams = httpPath.split("\\?");
 
         if (isMandatory && queryParams.length != 2) {
@@ -234,10 +262,10 @@ public class MatrixClientHandler implements RequestHandler {
                     throw new WebException(HttpStatus.BAD_REQUEST, "Illegal query parameter. Was: " + nameAndValue[0]);
                 }
 
-                if (nameAndValue[0].equalsIgnoreCase(ROW_QUERY_PARAM)) {
-                    row = parseInteger(nameAndValue[1], ROW_QUERY_PARAM);
-                } else if (nameAndValue[0].equalsIgnoreCase(COL_QUERY_PARAM)) {
-                    col = parseInteger(nameAndValue[1], COL_QUERY_PARAM);
+                if (nameAndValue[0].equalsIgnoreCase(rowParamName)) {
+                    row = parseInteger(nameAndValue[1], rowParamName);
+                } else if (nameAndValue[0].equalsIgnoreCase(colParamName)) {
+                    col = parseInteger(nameAndValue[1], colParamName);
                 }
             }
         }

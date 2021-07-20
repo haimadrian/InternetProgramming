@@ -25,7 +25,7 @@ public class ActionThreadService implements ExecutorService {
         amountOfWorkers = Runtime.getRuntime().availableProcessors() * THREADS_PER_PROCESSOR;
 
         // Create a new cached thread pool, but use bounded max pool size, so we will not create too many threads.
-        threadPool = new ThreadPoolExecutor(0, amountOfWorkers, 60L, TimeUnit.SECONDS, new SynchronousQueue<>());
+        threadPool = new ThreadPoolExecutor(amountOfWorkers, amountOfWorkers, 60L, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
     }
 
     /**

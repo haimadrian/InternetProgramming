@@ -4,7 +4,7 @@ package org.hit.internetprogramming.eoh.server.graph.algorithm;
 import lombok.*;
 
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Some information about a vertex that we visit in one of the shortest paths algorithms (BFS
@@ -13,8 +13,6 @@ import java.util.HashSet;
  * @author Haim Adrian
  * @since 18-Jul-21
  */
-@RequiredArgsConstructor
-@AllArgsConstructor
 @ToString
 public class VertexDistanceInfo<V> {
     /**
@@ -29,7 +27,7 @@ public class VertexDistanceInfo<V> {
      * Default value is {@value Integer#MAX_VALUE}, indicates that a vertex is not reachable from root.
      */
     @Getter
-    @Setter(AccessLevel.PROTECTED)
+    @Setter(AccessLevel.PACKAGE)
     private long distance = Long.MAX_VALUE;
 
     /**
@@ -37,6 +35,13 @@ public class VertexDistanceInfo<V> {
      * There might be multiple shortest paths, hence there might be multiple parents.
      */
     @Getter
-    @Setter(AccessLevel.PROTECTED)
-    private Collection<V> parents = new HashSet<>();
+    private final Collection<V> parents = ConcurrentHashMap.newKeySet();
+
+    /**
+     * Constructs a new {@link VertexDistanceInfo}
+     * @param vertex The vertex to keep information for
+     */
+    public VertexDistanceInfo(@NonNull V vertex) {
+        this.vertex = vertex;
+    }
 }
