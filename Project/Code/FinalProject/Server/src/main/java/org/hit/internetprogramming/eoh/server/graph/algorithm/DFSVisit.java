@@ -1,6 +1,7 @@
 package org.hit.internetprogramming.eoh.server.graph.algorithm;
 
 import org.hit.internetprogramming.eoh.common.graph.IGraph;
+import org.hit.internetprogramming.eoh.server.action.ActionThreadService;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -68,7 +69,8 @@ public class DFSVisit<T> {
 
             // If we have already computed the connected component of this vertex, return null to tell the caller
             // that the relevant connected component is already in his hands, or it is currently being computed by another thread.
-            if (!allVisitedVertices.add(currVertex)) {
+            // In addition, in case server was instructed to shutdown now, we should stop current execution.
+            if (!allVisitedVertices.add(currVertex) || ActionThreadService.getInstance().isShutdownNow()) {
                 return null;
             }
 

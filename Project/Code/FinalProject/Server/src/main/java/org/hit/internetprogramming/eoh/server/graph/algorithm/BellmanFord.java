@@ -140,6 +140,11 @@ public class BellmanFord<V> implements ShortestPathAlgorithm<V> {
         public Void call() {
             // For each edge (u, v) in edges do:
             for (Pair<V, V> edge : edges) {
+                // If thread service instructed to shutdown now, we cannot continue executing.
+                if (ActionThreadService.getInstance().isShutdownNow()) {
+                    break;
+                }
+
                 // Weight of the edge between u to v
                 int weight = graph.getValue(edge.getRight());
 

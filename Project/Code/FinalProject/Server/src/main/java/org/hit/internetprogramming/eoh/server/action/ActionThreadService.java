@@ -5,6 +5,7 @@ import lombok.Getter;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -22,6 +23,8 @@ public class ActionThreadService implements ExecutorService {
     @Getter
     private final int amountOfWorkers;
 
+    private final AtomicBoolean isShutdownNow;
+
     /**
      * Use an atomic counter so we can count threads (action workers) and give them meaningful name.
      */
@@ -30,6 +33,7 @@ public class ActionThreadService implements ExecutorService {
     private ActionThreadService() {
         amountOfWorkers = Runtime.getRuntime().availableProcessors() * THREADS_PER_PROCESSOR;
         workerThreadIdCounter = new AtomicInteger();
+        isShutdownNow = new AtomicBoolean(false);
 
         // Create a new cached thread pool, but use bounded max pool size, so we will not create too many threads.
         threadPool = new ThreadPoolExecutor(amountOfWorkers, amountOfWorkers, 60L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), this::workerThreadFactory);
@@ -61,6 +65,14 @@ public class ActionThreadService implements ExecutorService {
     @Override
     public boolean isShutdown() {
         return threadPool.isShutdown();
+    }
+
+    /**
+     * Useful functionality to stop action tasks when server is shutting down.
+     * @return Whether action thread service instructed to stop now, or not.
+     */
+    public boolean isShutdownNow() {
+        return isShutdownNow.get();
     }
 
     @Override
