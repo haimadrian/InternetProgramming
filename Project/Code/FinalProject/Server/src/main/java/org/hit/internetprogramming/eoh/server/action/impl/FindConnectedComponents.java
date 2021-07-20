@@ -43,10 +43,10 @@ public class FindConnectedComponents implements Action {
         Lock lock = new ReentrantLock();
         for (Index currentSource : unVisitedVertices) {
             tasks.add(() -> {
-                HashSet<Index> connectedComponent;
+                HashSet<Index> connectedComponent = new HashSet<>(dfsVisit.traverse(new MatrixGraphAdapter<>(graph, currentSource)));
+
                 lock.lock();
                 try {
-                    connectedComponent = new HashSet<>(dfsVisit.traverse(new MatrixGraphAdapter<>(graph, currentSource)));
                     allCC.add(connectedComponent);
                 } finally {
                     lock.unlock();
