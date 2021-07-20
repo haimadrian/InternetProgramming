@@ -1,10 +1,14 @@
 //package org.hit.internetprogramming.eoh.server.graph.algorithm;
 //
 //import org.hamcrest.Matchers;
+//import org.hit.internetprogramming.eoh.common.action.ActionType;
+//import org.hit.internetprogramming.eoh.common.comms.Request;
 //import org.hit.internetprogramming.eoh.common.graph.MatrixGraphAdapter;
 //import org.hit.internetprogramming.eoh.common.mat.Index;
-//import org.hit.internetprogramming.eoh.common.mat.RegularMatrix;
-//import org.hit.internetprogramming.eoh.common.mat.StandardMatrix;
+//import org.hit.internetprogramming.eoh.common.mat.impl.Matrix;
+//import org.hit.internetprogramming.eoh.server.action.ActionContext;
+//import org.hit.internetprogramming.eoh.server.action.impl.FindConnectedComponents;
+//import org.hit.internetprogramming.eoh.server.impl.Graphs;
 //import org.junit.jupiter.api.Test;
 //
 //import java.util.ArrayList;
@@ -21,10 +25,11 @@
 //
 //    @Test
 //    public void testConnectedComponents_oneCCInRegularMatrix() {
-//        int[][] arr = {{1, 0, 0}, {1, 0, 1}, {0, 1, 1}};
-//        RegularMatrix regularMatrix = new RegularMatrix(arr);
+//        Integer[][] arr = {{1, 0, 0}, {1, 0, 1}, {0, 1, 1}};
+//        Matrix<Integer> regularMatrix = new Matrix(arr);
 //        MatrixGraphAdapter<Integer> graph = new MatrixGraphAdapter<>(regularMatrix, Index.from(0, 0));
-//        ConnectedComponents<Index> connectedComponents = new ConnectedComponents<>();
+//        FindConnectedComponents connectedComponents = new FindConnectedComponents();
+//
 //
 //        List<Set<Index>> actual = new ArrayList<>();
 //        Set<Index> oneCC = new HashSet<>();
@@ -37,7 +42,7 @@
 //
 //
 //        //1. Test equal.
-//        assertThat(connectedComponents.traverse(graph), is(actual));
+//        assertThat(connectedComponents.execute(Graphs.getInstance().getGraph(actionContext.getClientInfo()), is(actual));
 //    }
 //
 //    @Test
