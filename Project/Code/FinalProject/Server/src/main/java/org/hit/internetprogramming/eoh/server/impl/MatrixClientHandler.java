@@ -1,5 +1,6 @@
 package org.hit.internetprogramming.eoh.server.impl;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.log4j.Log4j2;
@@ -8,6 +9,7 @@ import org.hit.internetprogramming.eoh.common.comms.HttpStatus;
 import org.hit.internetprogramming.eoh.common.comms.Request;
 import org.hit.internetprogramming.eoh.common.comms.Response;
 import org.hit.internetprogramming.eoh.common.comms.TwoVerticesBody;
+import org.hit.internetprogramming.eoh.common.graph.IGraph;
 import org.hit.internetprogramming.eoh.common.mat.Index;
 import org.hit.internetprogramming.eoh.common.util.JsonUtils;
 import org.hit.internetprogramming.eoh.server.action.ActionExecutor;
@@ -16,12 +18,20 @@ import org.hit.internetprogramming.eoh.server.common.RequestHandler;
 import org.hit.internetprogramming.eoh.server.common.exception.FavIconException;
 import org.hit.internetprogramming.eoh.server.common.exception.WebException;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
-import static org.hit.internetprogramming.eoh.server.common.ClientHandler.*;
+import static org.hit.internetprogramming.eoh.server.common.ClientHandler.END_OF_HEADERS;
+import static org.hit.internetprogramming.eoh.server.common.ClientHandler.HTTP_HEADERS;
 
 /**
  * A matrix client handler used to handle requests from MatrixClient and server them.<br/>
@@ -87,10 +97,28 @@ public class MatrixClientHandler implements RequestHandler {
      */
     public static final String COL_QUERY_PARAM = "col";
 
+    public static final String HTML_PAGE;
+
     /**
      * Jackson object mapper to convert json string to bean and vice versa
      */
     private final ObjectMapper objectMapper;
+
+    static {
+        String content;
+        try {
+            InputStream resourceAsStream = MatrixClientHandler.class.getClassLoader().getResourceAsStream("index.html");
+            if (resourceAsStream != null) {
+                content = new BufferedReader(new InputStreamReader(resourceAsStream, StandardCharsets.UTF_8)).lines().collect(Collectors.joining("\n"));
+            } else {
+                content = "##1<br/>##2";
+            }
+        } catch (Exception e) {
+            content = "##1<br/>##2";
+        }
+
+        HTML_PAGE = content;
+    }
 
     /**
      * Constructs a new {@link MatrixClientHandler}
@@ -137,7 +165,7 @@ public class MatrixClientHandler implements RequestHandler {
         }
 
         stopCommunication.accept(stopCommunicating);
-        return responseToString(response, request != null && request.isHttp());
+        return responseToString(response, request != null && request.isHttp(), request);
     }
 
     @Override
@@ -152,15 +180,16 @@ public class MatrixClientHandler implements RequestHandler {
             response = Response.error(thrown.getMessage());
         }
 
-        return responseToString(response, thrown instanceof WebException);
+        return responseToString(response, thrown instanceof WebException, null);
     }
 
-    private String responseToString(Response response, boolean httpRequest) throws IOException {
+    private String responseToString(Response response, boolean httpRequest, Request request) throws IOException {
         String responseString = objectMapper.writeValueAsString(response);
 
         if (httpRequest || response.isHttp()) {
+            String paragraph1 = (request == null ? "Error" : request.getActionType().name()) + " response:";
             String contentFormatted = formatContentForHttp(response);
-            String body = String.format(HTTP_BODY, responseString, contentFormatted);
+            String body = HTML_PAGE.replace("##1", paragraph1).replace("##2", contentFormatted);
             responseString = String.format(HTTP_HEADERS, response.getStatus(), HttpStatus.valueOf(response.getStatus()).name(), "text/html", body.length()) + END_OF_HEADERS + body;
         }
 
@@ -168,13 +197,42 @@ public class MatrixClientHandler implements RequestHandler {
     }
 
     private String formatContentForHttp(Response response) {
-        String result = "Content:<br>";
-        JsonNode body = response.getBodyAs(JsonNode.class);
-        if (body != null) {
-            result += body.toString();
-        } else {
-            result += response.getMessage().replaceAll("\\n", "<br>").replaceAll(" ", "&nbsp;");
+        String result = null;
+
+        try {
+            List<Index> body = response.getBodyAs(new TypeReference<>() {});
+            result = body.stream().map(Index::toString).collect(Collectors.joining(System.lineSeparator())) + System.lineSeparator() +
+                    "Count: " + body.size();
+        } catch (Throwable ignore) {
+            try {
+                List<Collection<Index>> body = response.getBodyAs(new TypeReference<>() {});
+                result = body.stream().map(Collection::toString).collect(Collectors.joining(System.lineSeparator())) + System.lineSeparator() +
+                        "Count: " + body.size() + System.lineSeparator() +
+                        "Minimum length: " + body.stream().mapToInt(Collection::size).min().orElse(0) + System.lineSeparator() +
+                        "Maximum length: " + body.stream().mapToInt(Collection::size).max().orElse(0);
+            } catch (Throwable ignore2) {
+                try {
+                    IGraph<Index> body = response.getBodyAs(new TypeReference<>() {});
+                    result = body.printGraph();
+                } catch (Throwable ignore3) {
+                    try {
+                        result = response.getBodyAs(String.class);
+                    } catch (Throwable ignore4) {
+                        JsonNode body = response.getBodyAs(JsonNode.class);
+                        if (body != null) {
+                            result = body.toString();
+                        }
+                    }
+                }
+            }
         }
+
+        if (result == null) {
+            result = response.getMessage();
+        }
+
+        result = result.replaceAll("\\n", "<br>").replaceAll(" ", "&nbsp;").replaceAll("<a&nbsp;", "<a ").replaceAll("&nbsp;style=\"", " style=\"");
+
         return result;
     }
 
@@ -234,7 +292,9 @@ public class MatrixClientHandler implements RequestHandler {
             request = new Request(ActionType.SHORTEST_PATHS, new TwoVerticesBody<>(
                     fetchIndexFromQuery(httpPathLower, false, "srcrow", "srccol"),
                     fetchIndexFromQuery(httpPathLower, false, "destrow", "destcol")), true);
-        }  else {
+        } else if (httpPathLower.equals("/")) {
+            request = new Request(ActionType.INDEX_HTML, null, true);
+        } else {
             throw new WebException(HttpStatus.NOT_FOUND, "No handler for: " + httpPath);
         }
 

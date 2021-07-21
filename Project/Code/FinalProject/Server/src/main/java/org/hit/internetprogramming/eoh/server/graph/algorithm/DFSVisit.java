@@ -70,7 +70,7 @@ public class DFSVisit<T> {
             // If we have already computed the connected component of this vertex, return null to tell the caller
             // that the relevant connected component is already in his hands, or it is currently being computed by another thread.
             // In addition, in case server was instructed to shutdown now, we should stop current execution.
-            if (!allVisitedVertices.add(currVertex) || ActionThreadService.getInstance().isShutdownNow()) {
+            if (allVisitedVertices.contains(currVertex) || ActionThreadService.getInstance().isShutdownNow()) {
                 return null;
             }
 
@@ -86,6 +86,7 @@ public class DFSVisit<T> {
             });
         }
 
+        allVisitedVertices.addAll(visitedVertices);
         return new ArrayList<>(visitedVertices);
     }
 
