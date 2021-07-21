@@ -95,6 +95,9 @@ public class ClientMain {
                         ActionType actionType = readChoice(scanner, 1, 2) == 1 ? ActionType.SHORTEST_PATHS : ActionType.SHORTEST_PATHS_IN_WEIGHTED_GRAPH;
                         executeRequest(new Request(actionType, new TwoVerticesBody<>(source, dest)), false, new TypeReference<List<Collection<Index>>>() {});
                         break;
+                    case SUBMARINES:
+                        executeRequest(new Request(ActionType.SUBMARINES), true, null);
+                        break;
                     case PRINT_GRAPH:
                         executeRequest(new Request(ActionType.PRINT_GRAPH), true, null);
                         break;
