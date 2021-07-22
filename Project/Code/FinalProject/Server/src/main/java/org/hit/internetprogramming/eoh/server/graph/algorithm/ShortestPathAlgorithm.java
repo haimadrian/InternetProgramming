@@ -13,14 +13,14 @@ import java.util.Map;
  */
 public interface ShortestPathAlgorithm<V> {
     /**
-     * See {@link BFSVisit#traverse(IGraph)} and {@link BellmanFord#traverse(IGraph)}
+     * See {@link BFSVisit#traverse(IGraph)}, {@link BellmanFord#traverse(IGraph)} and {@link DijkstraWithNegCycleSupport#traverse(IGraph)}
      * @param graph The graph to traverse, starting from its root.
      * @return All visited vertices
      */
     Map<V, VertexDistanceInfo<V>> traverse(@NonNull IGraph<V> graph);
 
     /**
-     * See {@link BFSVisit#traverse(IGraph, Object)} and {@link BellmanFord#traverse(IGraph, Object)}
+     * See {@link BFSVisit#traverse(IGraph, Object)}, {@link BellmanFord#traverse(IGraph, Object)} and {@link DijkstraWithNegCycleSupport#traverse(IGraph, Object)}
      * @param graph The graph to traverse, starting from its root.
      * @param destination Where to stop. This is a vertex we are looking for.
      * @return All visited vertices
@@ -28,6 +28,19 @@ public interface ShortestPathAlgorithm<V> {
     Map<V, VertexDistanceInfo<V>> traverse(@NonNull IGraph<V> graph, V destination);
 
     enum Algorithm {
-        BFS, BELLMAN_FORD
+        /**
+         * {@link BFSVisit}
+         */
+        BFS,
+
+        /**
+         * {@link BellmanFord}
+         */
+        BELLMAN_FORD,
+
+        /**
+         * {@link DijkstraWithNegCycleSupport}
+         */
+        DIJKSTRA
     }
 }

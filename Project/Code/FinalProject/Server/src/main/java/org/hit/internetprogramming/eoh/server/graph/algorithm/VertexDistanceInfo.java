@@ -14,7 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @since 18-Jul-21
  */
 @ToString
-public class VertexDistanceInfo<V> {
+public class VertexDistanceInfo<V> implements Comparable<VertexDistanceInfo<V>> {
     /**
      * A vertex visited by a short path algorithm. (BFS or Bellman-Ford).
      */
@@ -43,5 +43,10 @@ public class VertexDistanceInfo<V> {
      */
     public VertexDistanceInfo(@NonNull V vertex) {
         this.vertex = vertex;
+    }
+
+    @Override
+    public int compareTo(VertexDistanceInfo<V> anotherVertex) {
+        return Long.compare(distance, anotherVertex.distance);
     }
 }

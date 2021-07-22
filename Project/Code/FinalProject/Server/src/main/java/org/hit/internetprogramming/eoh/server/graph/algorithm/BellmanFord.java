@@ -7,12 +7,10 @@ import org.hit.internetprogramming.eoh.common.graph.IGraph;
 import org.hit.internetprogramming.eoh.server.action.ActionThreadService;
 import org.hit.internetprogramming.eoh.server.common.exception.NegativeWeightCycleException;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * A class that implements Bellman-Ford algorithm in order to find shortest paths in a weighted graph.
@@ -23,8 +21,6 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 @Log4j2
 public class BellmanFord<V> implements ShortestPathAlgorithm<V> {
-    private static final int MINIMUM__AMOUNT_OF_EDGES_PER_WORKER = 20;
-
     /**
      * Algorithm: BELLMAN-FORD(G, w, s)<br/>
      * <pre>{@code
@@ -54,19 +50,20 @@ public class BellmanFord<V> implements ShortestPathAlgorithm<V> {
 
         // Step 1: Source vertex to source vertex weight 0, which means no move.
         visitedVertices.computeIfAbsent(graph.getRoot(), VertexDistanceInfo::new).setDistance(0);
-        List<Callable<Void>> tasks = new ArrayList<>();
+        //List<Callable<Void>> tasks = new ArrayList<>();
 
         // Step 2: Relax edges repeatedly
         // Repeat |V|-1 times: (Longest simple path can be up to |V|-1 edges)
         for (int i = 1; i < vertices.size(); i++) {
-            tasks.add(new RelaxTask<>(graph, edges, visitedVertices));
+            new RelaxTask<>(graph, edges, visitedVertices).call();
         }
 
-        try {
+        // It does not work, running it in parallel... Use Dijkstra instead.
+        /*try {
             ActionThreadService.getInstance().invokeAll(tasks);
         } catch (InterruptedException e) {
             log.error("Bellman-Ford parallel search was interrupted.", e);
-        }
+        }*/
 
         // Step 3: Check for negative weight cycles
         // For each edge (u, v) in edges do:
@@ -93,31 +90,6 @@ public class BellmanFord<V> implements ShortestPathAlgorithm<V> {
         return traverse(graph);
     }
 
-    private void optionallyRunParallelRelax(IGraph<V> graph, List<Pair<V, V>> edges, Map<V, VertexDistanceInfo<V>> visitedVertices) {
-        int portions = (ActionThreadService.getInstance().getAmountOfWorkers() / 2);
-        int edgesPerWorker = edges.size() / portions;
-
-        // Use parallel search only if we have at list the minimum of edges to separate between workers
-        if (edgesPerWorker >= MINIMUM__AMOUNT_OF_EDGES_PER_WORKER) {
-            log.debug("There are at least " + MINIMUM__AMOUNT_OF_EDGES_PER_WORKER + " edges per worker. Running in parallel mode");
-
-            List<Callable<Void>> tasks = new ArrayList<>();
-            for (int i = 0; i < portions; i++) {
-                List<Pair<V, V>> portion = edges.subList(i * edgesPerWorker, Math.min(i * edgesPerWorker + edgesPerWorker, edges.size()));
-                tasks.add(new RelaxTask<>(graph, portion, visitedVertices));
-            }
-
-            try {
-                ActionThreadService.getInstance().invokeAll(tasks);
-            } catch (InterruptedException e) {
-                log.error("Bellman-Ford parallel search was interrupted.", e);
-            }
-        } else {
-            log.debug("There are less than " + MINIMUM__AMOUNT_OF_EDGES_PER_WORKER + " edges per worker. Running in non-parallel mode");
-            new RelaxTask<>(graph, edges, visitedVertices).call();
-        }
-    }
-
     private String edgeToString(Map<V, VertexDistanceInfo<V>> visitedVertices, Pair<V, V> edge) {
         V u = edge.getLeft();
         V v = edge.getRight();
@@ -128,7 +100,6 @@ public class BellmanFord<V> implements ShortestPathAlgorithm<V> {
         private final IGraph<V> graph;
         private final List<Pair<V, V>> edges;
         private final Map<V, VertexDistanceInfo<V>> visitedVertices;
-        private final ReentrantLock locker = new ReentrantLock();
 
         public RelaxTask(IGraph<V> graph, List<Pair<V, V>> edges, Map<V, VertexDistanceInfo<V>> visitedVertices) {
             this.graph = graph;
@@ -148,30 +119,22 @@ public class BellmanFord<V> implements ShortestPathAlgorithm<V> {
                 // Weight of the edge between u to v
                 int weight = graph.getValue(edge.getRight());
 
-                locker.lock();
-                try {
-                    long uVertexWeight = visitedVertices.computeIfAbsent(edge.getLeft(), VertexDistanceInfo::new).getDistance();
-                    long vVertexWeight = visitedVertices.computeIfAbsent(edge.getRight(), VertexDistanceInfo::new).getDistance();
+                long uVertexWeight = visitedVertices.computeIfAbsent(edge.getLeft(), VertexDistanceInfo::new).getDistance();
+                long vVertexWeight = visitedVertices.computeIfAbsent(edge.getRight(), VertexDistanceInfo::new).getDistance();
 
-                    // Avoid of overflow
-                    if (uVertexWeight != Long.MAX_VALUE) {
-                        long newWeight = uVertexWeight + weight;
+                // Avoid of overflow
+                if (uVertexWeight != Long.MAX_VALUE) {
+                    long newWeight = uVertexWeight + weight;
+                    if (newWeight < vVertexWeight) {
+                        // Clear old parents
+                        visitedVertices.get(edge.getRight()).getParents().clear();
+                        visitedVertices.get(edge.getRight()).getParents().add(edge.getLeft());
 
-                        if (newWeight < vVertexWeight) {
-
-                            // Clear old parents
-                            visitedVertices.get(edge.getRight()).getParents().clear();
-
-                            // Update distance
-                            visitedVertices.get(edge.getRight()).setDistance(newWeight);
-                        }
-
-                        if (newWeight == vVertexWeight) {
-                            visitedVertices.get(edge.getRight()).getParents().add(edge.getLeft());
-                        }
+                        // Update distance
+                        visitedVertices.get(edge.getRight()).setDistance(newWeight);
+                    } else if (newWeight == vVertexWeight) {
+                        visitedVertices.get(edge.getRight()).getParents().add(edge.getLeft());
                     }
-                } finally {
-                    locker.unlock();
                 }
             }
 

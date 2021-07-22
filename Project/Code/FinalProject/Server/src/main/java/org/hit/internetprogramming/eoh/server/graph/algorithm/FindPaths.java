@@ -66,14 +66,37 @@ public class FindPaths<T> {
     }
 
     /**
-     * Find all shortest paths in the specified weighted graph (passed to this {@link FindPaths}) between {@code root} and {@code to}.
+     * Find all shortest paths in the specified weighted graph (passed to this {@link FindPaths}) between {@code root} and {@code to}.<br/>
+     * We use the {@link BellmanFord} algorithm which would throw an exception when a negative cycle is detected, and it does
+     * not run in parallel.
      * @param to The vertex to get to.
      * @return Collection of all paths to destination vertex, or empty if we could not reach to destination.
      */
-    public List<Collection<T>> findShortestPathsInWeightedGraph(T to) {
+    public List<Collection<T>> findShortestPathsInWeightedGraphBellmanFord(T to) {
         List<Collection<T>> paths = new ArrayList<>();
 
         ShortestPathAlgorithm<T> bellmanFordAlgorithm = algorithms.computeIfAbsent(ShortestPathAlgorithm.Algorithm.BELLMAN_FORD, algo -> new BellmanFord<>());
+        Map<T, VertexDistanceInfo<T>> visitedVertices = bellmanFordAlgorithm.traverse(graph, to);
+
+        // It might be that destination was not reachable. So don't find paths in case destination wasn't reachable.
+        if (visitedVertices.containsKey(to)) {
+            findShortestPaths(to, new LinkedList<>(), new HashSet<>(), paths, visitedVertices);
+        }
+
+        return paths;
+    }
+
+    /**
+     * Find all shortest paths in the specified weighted graph (passed to this {@link FindPaths}) between {@code root} and {@code to}.<br/>
+     * We use the {@link DijkstraWithNegCycleSupport} algorithm with modification that supports negative cycles, and run in parallel,
+     * using Fork-Join thread pool.
+     * @param to The vertex to get to.
+     * @return Collection of all paths to destination vertex, or empty if we could not reach to destination.
+     */
+    public List<Collection<T>> findShortestPathsInWeightedGraphDijkstra(T to) {
+        List<Collection<T>> paths = new ArrayList<>();
+
+        ShortestPathAlgorithm<T> bellmanFordAlgorithm = algorithms.computeIfAbsent(ShortestPathAlgorithm.Algorithm.DIJKSTRA, algo -> new DijkstraWithNegCycleSupport<>());
         Map<T, VertexDistanceInfo<T>> visitedVertices = bellmanFordAlgorithm.traverse(graph, to);
 
         // It might be that destination was not reachable. So don't find paths in case destination wasn't reachable.

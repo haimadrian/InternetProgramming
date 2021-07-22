@@ -198,6 +198,7 @@ public class MatrixClientHandler implements RequestHandler {
 
     private String formatContentForHttp(Response response) {
         String result = null;
+        boolean shouldPrepareTextForHtml = true;
 
         try {
             List<Index> body = response.getBodyAs(new TypeReference<>() {});
@@ -217,6 +218,10 @@ public class MatrixClientHandler implements RequestHandler {
                 } catch (Throwable ignore3) {
                     try {
                         result = response.getBodyAs(String.class);
+
+                        if (result != null) {
+                            shouldPrepareTextForHtml = false;
+                        }
                     } catch (Throwable ignore4) {
                         JsonNode body = response.getBodyAs(JsonNode.class);
                         if (body != null) {
@@ -231,7 +236,9 @@ public class MatrixClientHandler implements RequestHandler {
             result = response.getMessage();
         }
 
-        result = result.replaceAll("\\n", "<br>").replaceAll(" ", "&nbsp;").replaceAll("<a&nbsp;", "<a ").replaceAll("&nbsp;style=\"", " style=\"");
+        if (shouldPrepareTextForHtml) {
+            result = result.replaceAll("\\n", "<br>").replaceAll(" ", "&nbsp;");
+        }
 
         return result;
     }
