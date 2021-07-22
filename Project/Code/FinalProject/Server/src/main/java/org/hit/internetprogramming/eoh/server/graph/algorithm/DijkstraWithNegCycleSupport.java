@@ -5,9 +5,7 @@ import lombok.extern.log4j.Log4j2;
 import org.hit.internetprogramming.eoh.common.graph.IGraph;
 import org.hit.internetprogramming.eoh.server.action.ActionThreadService;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.RecursiveAction;
 import java.util.stream.Collectors;
@@ -111,9 +109,31 @@ public class DijkstraWithNegCycleSupport<V> implements ShortestPathAlgorithm<V> 
             long currVertexDistance = visitedVertices.computeIfAbsent(vertex, VertexDistanceInfo::new).getDistance();
 
             // Filter only those we have not reached to yet, or those that we've found a shortest path to.
-            reachableVertices = graph.getReachableVertices(vertex).stream().filter(v -> {
-                long neighborDistance = visitedVertices.computeIfAbsent(v, VertexDistanceInfo::new).getDistance();
-                return (neighborDistance == Long.MAX_VALUE) || (currVertexDistance + (int) graph.getValue(v) <= neighborDistance);
+            reachableVertices = graph.getReachableVertices(vertex).stream().filter(neighbor -> {
+                long neighborDistance = visitedVertices.computeIfAbsent(neighbor, VertexDistanceInfo::new).getDistance();
+
+                // For a vertex we are visiting for the first time, go ahead - there is nothing to limit here.
+                if (neighborDistance == Long.MAX_VALUE) {
+                    return true;
+                }
+
+                if (currVertexDistance + (int)graph.getValue(neighbor) <= neighborDistance) {
+                    // Test for negative cycle
+                    if ((currVertexDistance < 0) && ((int) graph.getValue(neighbor) < 0) && (isPredecessor(neighbor, vertex) || isPredecessor(vertex, neighbor))) {
+                        // Collect necessary data and warn about the detected negative cycle.
+                        Set<V> parents = new HashSet<>();
+                        collectParentsRecursively(vertex, parents);
+                        collectParentsRecursively(neighbor, parents);
+                        log.warn("Negative cycle detected. Vertices: " + vertex + ", " + neighbor + ". Cycle with: " + parents);
+                        return false;
+                    }
+
+                    // Continue to this neighbor as we've found a shorter distance
+                    return true;
+                }
+
+                // Do not continue to this neighbor, cause its distance is not shorter than the existing one.
+                return false;
             }).collect(Collectors.toList());
 
             if ((reachableVertices.size() >= THRESHOLD) && ((destination == null) || (!reachableVertices.contains(destination)))) {
@@ -128,6 +148,33 @@ public class DijkstraWithNegCycleSupport<V> implements ShortestPathAlgorithm<V> 
                     processNeighbor(reachableVertices.get(0));
                 }
             }
+        }
+
+        /**
+         * Tests if a vertex is a predecessor of a specified vertex.<br/>
+         * We use this method as a test to verify we do not enter into negative cycle.
+         * @param vertex The vertex to check if one of its predecessors is the specified potentialPredecessor.
+         * @param potentialPredecessor The vertex to check if it is one of the predecessors of the specified vertex.
+         * @return Predecessor or not
+         */
+        private boolean isPredecessor(V vertex, V potentialPredecessor) {
+            Set<V> parents = new HashSet<>();
+            collectParentsRecursively(vertex, parents);
+            return parents.contains(potentialPredecessor);
+        }
+
+        private void collectParentsRecursively(V vertex, Set<V> parents) {
+            if (vertex == null) {
+                return;
+            }
+
+            parents.add(vertex);
+            visitedVertices.get(vertex).getParents().forEach(parent -> {
+                // Avoid of cycles
+                if (!parents.contains(parent)) {
+                    collectParentsRecursively(parent, parents);
+                }
+            });
         }
 
         /**
