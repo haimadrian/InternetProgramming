@@ -44,16 +44,19 @@ public class FindConnectedComponents implements Action {
         for (Index currentSource : unVisitedVertices) {
             // Creating list of callable
             tasks.add(() -> {
-                Set<Index> connectedComponent = new HashSet<>(dfsVisit.traverse(new MatrixGraphAdapter<>(graph, currentSource)));
+                List<Index> traverse = dfsVisit.traverse(new MatrixGraphAdapter<>(graph, currentSource));
+                if (traverse != null) {
+                    Set<Index> connectedComponent = new HashSet<>(traverse);
 
-                lock.lock();
-                try {
-                    allCC.add(connectedComponent);
-                } finally {
-                    lock.unlock();
+                    lock.lock();
+                    try {
+                        allCC.add(connectedComponent);
+                    } finally {
+                        lock.unlock();
+                    }
+
+                    log.debug(() -> Thread.currentThread().getName() + " collected connected component: " + connectedComponent);
                 }
-
-                log.debug(() -> Thread.currentThread().getName() + " collected connected component: " + connectedComponent);
                 return null;
             });
         }

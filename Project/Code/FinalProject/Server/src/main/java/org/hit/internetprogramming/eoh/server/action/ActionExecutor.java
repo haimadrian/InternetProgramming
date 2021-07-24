@@ -43,6 +43,7 @@ public class ActionExecutor {
         actions.put(ActionType.SHORTEST_PATHS, FindShortestPaths.class);
         actions.put(ActionType.SHORTEST_PATHS_IN_WEIGHTED_GRAPH, FindShortestPathsInWeightedGraph.class);
         actions.put(ActionType.PRINT_GRAPH, PrintGraph.class);
+        actions.put(ActionType.INDEX_HTML, BuildIndexHtml.class);
     }
 
     /**

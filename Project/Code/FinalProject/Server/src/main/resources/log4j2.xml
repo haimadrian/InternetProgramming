@@ -4,7 +4,7 @@
 -->
 <Configuration status="info">
     <Properties>
-        <Property name="baseLogDir">C:/temp/InternetProgramming/MatrixServer/log</Property>
+        <Property name="baseLogDir">InternetProgramming/GraphServer/log</Property>
         <Property name="mainLogPattern">%d{DATE} %-5level [%threadName] %logger{1} - %msg%n%xThrowable</Property>
     </Properties>
     <Appenders>
@@ -57,6 +57,7 @@
             <AppenderRef ref="ConsoleErr"/> <!-- See logs in console when running from intellij -->
         </Logger>
         <Root level="info">
+            <AppenderRef ref="mainLog"/>
             <AppenderRef ref="ConsoleOut"/>
             <AppenderRef ref="ConsoleErr"/>
         </Root>

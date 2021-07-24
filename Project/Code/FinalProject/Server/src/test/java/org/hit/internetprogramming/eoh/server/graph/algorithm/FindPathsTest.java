@@ -10,6 +10,7 @@ import org.hit.internetprogramming.eoh.common.mat.impl.StandardMatrix;
 import org.hit.internetprogramming.eoh.server.common.exception.InputTooLargeException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.opentest4j.AssertionFailedError;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -20,8 +21,15 @@ import java.util.stream.Collectors;
  */
 public class FindPathsTest {
 
-    private static void pathsValidation(Collection<? extends Collection<Index>> expectedPaths, Collection<Collection<Index>> actualPaths) {
-        Assertions.assertEquals(expectedPaths.size(), actualPaths.size(), "Wrong amount of paths");
+    static void pathsValidation(Collection<? extends Collection<Index>> expectedPaths, Collection<Collection<Index>> actualPaths) {
+        try {
+            Assertions.assertEquals(expectedPaths.size(), actualPaths.size(), "Wrong amount of paths");
+        } catch (AssertionFailedError e) {
+            System.out.println("Expected: " + expectedPaths);
+            System.out.println("Actual: " + actualPaths);
+            throw e;
+        }
+
         for (Collection<Index> expectedPath : expectedPaths) {
             Assertions.assertTrue(actualPaths.contains(expectedPath), "Missing path: " + System.lineSeparator() +
                     expectedPath + System.lineSeparator() +
@@ -666,31 +674,6 @@ public class FindPathsTest {
 
         // Assert
         Assertions.assertEquals(1138020, paths.size());
-    }
-
-    //////////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////// Tests For Weighted Graph //////////////////////////////
-    //////////////////////////////////////////////////////////////////////////////////////
-
-    @Test
-    public void testFindShortestPaths_useWeightedGraph_findShortestPath() {
-        // Arrange
-        //@formatter:off
-        Integer[][] mat = {{100, 100, 100},
-                           {500, 900, 300}};
-        //@formatter:on
-        IMatrix<Integer> matrix = new StandardMatrix<>(mat);
-        IGraph<Index> graph = new MatrixGraphAdapter<>(matrix, Index.from(1, 0));
-
-        List<List<Index>> expectedPaths = new ArrayList<>(1);
-        expectedPaths.add(Arrays.asList(Index.from(1, 0), Index.from(0, 0), Index.from(0, 1), Index.from(0, 2), Index.from(1, 2)));
-
-        // Act
-        FindPaths<Index> findPaths = new FindPaths<>(graph);
-        Collection<Collection<Index>> paths = findPaths.findShortestPathsInWeightedGraph(Index.from(1, 2));
-
-        // Assert
-        pathsValidation(expectedPaths, paths);
     }
 
     /**
