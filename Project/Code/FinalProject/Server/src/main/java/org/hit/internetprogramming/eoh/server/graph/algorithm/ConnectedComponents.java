@@ -1,8 +1,6 @@
 package org.hit.internetprogramming.eoh.server.graph.algorithm;
 
 import lombok.extern.log4j.Log4j2;
-import org.hit.internetprogramming.eoh.common.comms.HttpStatus;
-import org.hit.internetprogramming.eoh.common.comms.Response;
 import org.hit.internetprogramming.eoh.common.graph.IGraph;
 import org.hit.internetprogramming.eoh.common.graph.MatrixGraphAdapter;
 import org.hit.internetprogramming.eoh.common.mat.Index;
@@ -13,6 +11,14 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+/**
+ * A class for receiving all the connected components in a graph.<br/>
+ * This class uses with DFS algorithm in order to Apply the requirements of connected components in a graph.<br/>
+ * This class works In parallel in order to improve the runtime.
+ * @author Orel Gershonovich
+ * @see DFSVisit
+ * @since 9-July-21
+ */
 @Log4j2
 public class ConnectedComponents {
     public List<Set<Index>> execute(IGraph<Index> graph) {

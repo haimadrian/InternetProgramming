@@ -19,8 +19,8 @@ import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * A class for receiving all the connected components in a graph.<br/>
- * The graph is represented by a matrix.
- *
+ * This class uses with DFS algorithm in order to Apply the requirements of connected components in a graph.<br/>
+ * This class works In parallel in order to improve the runtime.
  * @author Orel Gershonovich
  * @see DFSVisit
  * @since 9-July-21
@@ -42,6 +42,7 @@ public class FindConnectedComponents implements Action {
         Set<Set<Index>> allCC = new HashSet<>();
         Lock lock = new ReentrantLock();
         for (Index currentSource : unVisitedVertices) {
+            // Creating list of callable
             tasks.add(() -> {
                 Set<Index> connectedComponent = new HashSet<>(dfsVisit.traverse(new MatrixGraphAdapter<>(graph, currentSource)));
 
