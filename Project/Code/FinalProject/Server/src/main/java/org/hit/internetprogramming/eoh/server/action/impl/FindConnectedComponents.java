@@ -62,7 +62,6 @@ public class FindConnectedComponents implements Action {
             ActionThreadService.getInstance().invokeAll(tasks);
             finalListWithAllCCAsSet.addAll(allCC);
             finalListWithAllCCAsSet.sort(Comparator.comparingInt(Set::size));
-            System.out.println(finalListWithAllCCAsSet);
         } catch (InterruptedException e) {
             log.error("Failed to collect connected components", e);
         }
