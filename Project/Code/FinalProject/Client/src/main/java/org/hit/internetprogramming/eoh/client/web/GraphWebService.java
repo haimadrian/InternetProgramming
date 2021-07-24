@@ -58,7 +58,7 @@ public class GraphWebService {
     private void connect() {
         try {
             String ip = "127.0.0.1";
-            int port = 1234;
+            int port = 8005;
             log.info("Connecting to server at: " + ip + ":" + port);
 
             clientSocket = new Socket(ip, port);

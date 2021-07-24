@@ -91,7 +91,7 @@ public class ClientMain {
                     case SHORTEST_PATHS:
                         Index source = readIndex(scanner, "Please enter source index in tuple format. e.g. (0, 0)");
                         Index dest = readIndex(scanner, "Please enter destination index in tuple format. e.g. (2, 2)");
-                        log.info("Enter algorithm to use (1=BFS, 2=Bellman-Ford)");
+                        log.info("Enter algorithm to use (1=BFS, 2=Advanced-Dijkstra (weighted graph))");
                         ActionType actionType = readChoice(scanner, 1, 2) == 1 ? ActionType.SHORTEST_PATHS : ActionType.SHORTEST_PATHS_IN_WEIGHTED_GRAPH;
                         executeRequest(new Request(actionType, new TwoVerticesBody<>(source, dest)), false, new TypeReference<List<Collection<Index>>>() {});
                         break;

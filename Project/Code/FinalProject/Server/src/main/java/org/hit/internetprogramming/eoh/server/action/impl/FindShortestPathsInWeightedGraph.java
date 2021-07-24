@@ -15,7 +15,7 @@ import java.util.List;
 public class FindShortestPathsInWeightedGraph extends FindShortestPaths {
     @Override
     protected List<Collection<Index>> executeFindShortestPaths(FindPaths<Index> pathsFinder, Index destination) {
-        return pathsFinder.findShortestPathsInWeightedGraph(destination);
+        return pathsFinder.findShortestPathsInWeightedGraphDijkstra(destination);
     }
 }
 

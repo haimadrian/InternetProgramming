@@ -86,6 +86,11 @@ public enum ActionType {
     /**
      * Disconnects from server
      */
-    DISCONNECT
+    DISCONNECT,
+
+    /**
+     * A special request, handled by HTTP part of the server, to build index.html with links to other actions
+     */
+    INDEX_HTML
 }
 

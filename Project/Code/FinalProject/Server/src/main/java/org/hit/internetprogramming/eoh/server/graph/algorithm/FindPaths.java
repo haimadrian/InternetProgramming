@@ -59,18 +59,20 @@ public class FindPaths<T> {
 
         // It might be that destination was not reachable. So don't find paths in case destination wasn't reachable.
         if (visitedVertices.containsKey(to)) {
-            findShortestPaths(to, new LinkedList<>(), paths, visitedVertices);
+            findShortestPaths(to, new LinkedList<>(), new HashSet<>(), paths, visitedVertices);
         }
 
         return paths;
     }
 
     /**
-     * Find all shortest paths in the specified weighted graph (passed to this {@link FindPaths}) between {@code root} and {@code to}.
+     * Find all shortest paths in the specified weighted graph (passed to this {@link FindPaths}) between {@code root} and {@code to}.<br/>
+     * We use the {@link BellmanFord} algorithm which would throw an exception when a negative cycle is detected, and it does
+     * not run in parallel.
      * @param to The vertex to get to.
      * @return Collection of all paths to destination vertex, or empty if we could not reach to destination.
      */
-    public List<Collection<T>> findShortestPathsInWeightedGraph(T to) {
+    public List<Collection<T>> findShortestPathsInWeightedGraphBellmanFord(T to) {
         List<Collection<T>> paths = new ArrayList<>();
 
         ShortestPathAlgorithm<T> bellmanFordAlgorithm = algorithms.computeIfAbsent(ShortestPathAlgorithm.Algorithm.BELLMAN_FORD, algo -> new BellmanFord<>());
@@ -78,16 +80,43 @@ public class FindPaths<T> {
 
         // It might be that destination was not reachable. So don't find paths in case destination wasn't reachable.
         if (visitedVertices.containsKey(to)) {
-            findShortestPaths(to, new LinkedList<>(), paths, visitedVertices);
+            findShortestPaths(to, new LinkedList<>(), new HashSet<>(), paths, visitedVertices);
+        }
+
+        return paths;
+    }
+
+    /**
+     * Find all shortest paths in the specified weighted graph (passed to this {@link FindPaths}) between {@code root} and {@code to}.<br/>
+     * We use the {@link DijkstraWithNegCycleSupport} algorithm with modification that supports negative cycles, and run in parallel,
+     * using Fork-Join thread pool.
+     * @param to The vertex to get to.
+     * @return Collection of all paths to destination vertex, or empty if we could not reach to destination.
+     */
+    public List<Collection<T>> findShortestPathsInWeightedGraphDijkstra(T to) {
+        List<Collection<T>> paths = new ArrayList<>();
+
+        ShortestPathAlgorithm<T> bellmanFordAlgorithm = algorithms.computeIfAbsent(ShortestPathAlgorithm.Algorithm.DIJKSTRA, algo -> new DijkstraWithNegCycleSupport<>());
+        Map<T, VertexDistanceInfo<T>> visitedVertices = bellmanFordAlgorithm.traverse(graph, to);
+
+        // It might be that destination was not reachable. So don't find paths in case destination wasn't reachable.
+        if (visitedVertices.containsKey(to)) {
+            findShortestPaths(to, new LinkedList<>(), new HashSet<>(), paths, visitedVertices);
         }
 
         return paths;
     }
 
     @SuppressWarnings("unchecked")
-    private void findShortestPaths(T currentVertex, LinkedList<T> currentPath, List<Collection<T>> paths, Map<T, VertexDistanceInfo<T>> visitedVertices) {
+    private void findShortestPaths(T currentVertex, LinkedList<T> currentPath, Set<T> currentPathBackedBy, List<Collection<T>> paths, Map<T, VertexDistanceInfo<T>> visitedVertices) {
+        // In case of cycle, exit.
+        if (currentPathBackedBy.contains(currentVertex)) {
+            return;
+        }
+
         // Add current vertex as first vertex in the path, cause we traverse from leaves to root.
         currentPath.addFirst(currentVertex);
+        currentPathBackedBy.add(currentVertex);
         VertexDistanceInfo<T> currentVertexInfo = visitedVertices.get(currentVertex);
 
         // Base case - no parents means a root.
@@ -97,13 +126,14 @@ public class FindPaths<T> {
         } else {
             // Go over all parents and call the method recursively, so we will add all paths. (a different path for each parent)
             for (T parent : currentVertexInfo.getParents()) {
-                findShortestPaths(parent, currentPath, paths, visitedVertices);
+                findShortestPaths(parent, currentPath, currentPathBackedBy, paths, visitedVertices);
             }
         }
 
         // Remove current vertex that we have inserted at the beginning of this method, so we will not affect
         // other recursive paths.
         currentPath.removeFirst();
+        currentPathBackedBy.remove(currentVertex);
     }
 
     /**

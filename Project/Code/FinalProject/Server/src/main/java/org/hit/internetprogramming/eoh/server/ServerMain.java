@@ -29,6 +29,7 @@ public class ServerMain {
     private static final String STDOUT_LOGGER_NAME = "stdout";
     private static final String STDERR_LOGGER_NAME = "stderr";
     public static final String MATRIX_SERVER = "Graph Server";
+    private static final int PORT = 8005;
 
     private Logger log;
     private TrayIcon trayIcon;
@@ -85,7 +86,7 @@ public class ServerMain {
     private void run() {
         log = LogManager.getLogger(ServerMain.class);
 
-        server = new TCPServer(1234, 0, 10, new MatrixClientHandler());
+        server = new TCPServer(PORT, 0, 10, new MatrixClientHandler());
         server.start();
         showTrayIcon();
 
