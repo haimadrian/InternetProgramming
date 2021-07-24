@@ -21,7 +21,7 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 @Log4j2
 public class ConnectedComponents {
-    public List<Set<Index>> execute(IGraph<Index> graph) {
+    public List<Set<Index>> collect(IGraph<Index> graph) {
         if (graph == null) {
             return null;
         }

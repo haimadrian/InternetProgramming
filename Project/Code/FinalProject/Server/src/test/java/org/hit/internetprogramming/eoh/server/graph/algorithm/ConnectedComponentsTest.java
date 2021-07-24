@@ -44,7 +44,7 @@ public class ConnectedComponentsTest {
 
 
         //1. Test equal.
-        assertThat(connectedComponents.execute(graph), is(actual));
+        assertThat(connectedComponents.collect(graph), is(actual));
     }
     
     @Test
@@ -83,13 +83,13 @@ public class ConnectedComponentsTest {
         fifthCCInSM.add(Index.from(2, 2));
 
         //1. Test equal.
-        List<Set<Index>> actual = connectedComponents.execute(graphOfMatrix);
+        List<Set<Index>> actual = connectedComponents.collect(graphOfMatrix);
         assertThat(actual, Matchers.containsInAnyOrder(firstCCInRegularMatrix));
         //2. Check List Size
         assertThat(actual, hasSize(1));
 
         //1. Test equal.
-        actual = connectedComponents.execute(graphOfStandardMatrix);
+        actual = connectedComponents.collect(graphOfStandardMatrix);
         assertThat(actual, Matchers.containsInAnyOrder(firstCCInSM, secondCCInSM, thirdCCInSM, fourthCCInSM, fifthCCInSM));
         //2. Check List Size
         assertThat(actual, hasSize(5));
@@ -118,7 +118,7 @@ public class ConnectedComponentsTest {
         actual.add(firstCC);
         actual.add(secondCC);
 
-        actual = connectedComponents.execute(graph);
+        actual = connectedComponents.collect(graph);
         //1. Test equal.
         assertThat(actual, Matchers.containsInAnyOrder(firstCC, secondCC));
         //2. Check List Size
@@ -160,7 +160,7 @@ public class ConnectedComponentsTest {
 
 
         //1. Test equal.
-        List<Set<Index>> value = connectedComponents.execute(graph);
+        List<Set<Index>> value = connectedComponents.collect(graph);
         System.out.println(value);
 
 
@@ -202,7 +202,7 @@ public class ConnectedComponentsTest {
         actual.add(fourthCC);
 
         //1. Test equal.
-        actual = connectedComponents.execute(graph);
+        actual = connectedComponents.collect(graph);
         assertThat(actual , Matchers.containsInAnyOrder(firstCC, secondCC, thirdCC, fourthCC));
         //2. Check List Size
         assertThat(actual, hasSize(4));
