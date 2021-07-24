@@ -207,7 +207,7 @@ public class MatrixClientHandler implements RequestHandler {
         } catch (Throwable ignore) {
             try {
                 List<Collection<Index>> body = response.getBodyAs(new TypeReference<>() {});
-                result = body.stream().map(Collection::toString).collect(Collectors.joining(System.lineSeparator())) + System.lineSeparator() +
+                result = body.stream().map(indices -> indices.toString() + " (" + indices.size() + ")").collect(Collectors.joining(System.lineSeparator())) + System.lineSeparator() +
                         "Count: " + body.size() + System.lineSeparator() +
                         "Minimum length: " + body.stream().mapToInt(Collection::size).min().orElse(0) + System.lineSeparator() +
                         "Maximum length: " + body.stream().mapToInt(Collection::size).max().orElse(0);

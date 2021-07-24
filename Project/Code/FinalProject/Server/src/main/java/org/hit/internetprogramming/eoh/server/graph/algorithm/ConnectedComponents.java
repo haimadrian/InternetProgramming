@@ -34,16 +34,19 @@ public class ConnectedComponents {
         Lock lock = new ReentrantLock();
         for (Index currentSource : unVisitedVertices) {
             tasks.add(() -> {
-                Set<Index> connectedComponent = new HashSet<>(dfsVisit.traverse(new MatrixGraphAdapter<>(graph, currentSource)));
+                if (!ActionThreadService.getInstance().isShutdownNow()) {
+                    Set<Index> connectedComponent = new HashSet<>(dfsVisit.traverse(new MatrixGraphAdapter<>(graph, currentSource)));
 
-                lock.lock();
-                try {
-                    allCC.add(connectedComponent);
-                } finally {
-                    lock.unlock();
+                    lock.lock();
+                    try {
+                        allCC.add(connectedComponent);
+                    } finally {
+                        lock.unlock();
+                    }
+
+                    log.debug(() -> Thread.currentThread().getName() + " collected connected component: " + connectedComponent);
                 }
 
-                log.debug(() -> Thread.currentThread().getName() + " collected connected component: " + connectedComponent);
                 return null;
             });
         }
@@ -55,6 +58,7 @@ public class ConnectedComponents {
         } catch (InterruptedException e) {
             log.error("Failed to collect connected components", e);
         }
+
         return finalListWithAllCCAsSet;
     }
 }
