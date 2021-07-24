@@ -118,7 +118,7 @@ public class ConnectedComponentsTest {
         actual.add(firstCC);
         actual.add(secondCC);
 
-
+        actual = connectedComponents.execute(graph);
         //1. Test equal.
         assertThat(actual, Matchers.containsInAnyOrder(firstCC, secondCC));
         //2. Check List Size
@@ -148,7 +148,7 @@ public class ConnectedComponentsTest {
         secondCC.add(Index.from(2, 3));
 
         Set<Index> thirdCC = new HashSet<>();
-        thirdCC.add(Index.from(3, 0));
+        thirdCC.add(Index.from(4, 0));
         thirdCC.add(Index.from(4, 1));
         thirdCC.add(Index.from(4, 2));
         thirdCC.add(Index.from(4, 3));
@@ -168,9 +168,9 @@ public class ConnectedComponentsTest {
         int sizeSecondItem = 4;
         int sizeThirdItem = 5;
 
-        assertThat(actual, Matchers.containsInAnyOrder(firstCC, secondCC, thirdCC));
+        assertThat(value, Matchers.containsInAnyOrder(firstCC, secondCC, thirdCC));
         //2. Check List Size
-        assertThat(actual, hasSize(3));
+        assertThat(value, hasSize(3));
 
         //3. Check ascending order
         assertThat(sizeFirstItem, is(value.get(0).size()));
