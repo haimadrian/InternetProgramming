@@ -79,7 +79,7 @@ public class ActionThreadService implements ExecutorService {
 
         // Create a new cached thread pool, but use bounded max pool size, so we will not create too many threads.
         threadPool = new ThreadPoolExecutor(amountOfWorkers, amountOfWorkers, 60L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), this::workerThreadFactory);
-        forkJoinThreadPool = new ForkJoinPool(FORK_JOIN_THREADS_PER_PROCESSOR, this::forkJoinWorkerThreadFactory, (thread, e) -> log.error("Uncaught error in ForkJoin thread: " + thread.getName() + ". Error: " + e, e), true);
+        forkJoinThreadPool = new ForkJoinPool(Runtime.getRuntime().availableProcessors() * FORK_JOIN_THREADS_PER_PROCESSOR, this::forkJoinWorkerThreadFactory, (thread, e) -> log.error("Uncaught error in ForkJoin thread: " + thread.getName() + ". Error: " + e, e), true);
     }
 
     private Thread workerThreadFactory(Runnable r) {
