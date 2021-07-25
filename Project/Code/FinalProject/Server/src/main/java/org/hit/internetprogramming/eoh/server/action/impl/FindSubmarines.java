@@ -8,7 +8,9 @@ import org.hit.internetprogramming.eoh.common.graph.MatrixGraphAdapter;
 import org.hit.internetprogramming.eoh.common.mat.Index;
 import org.hit.internetprogramming.eoh.server.action.Action;
 import org.hit.internetprogramming.eoh.server.action.ActionContext;
+import org.hit.internetprogramming.eoh.server.graph.algorithm.ConnectedComponents;
 import org.hit.internetprogramming.eoh.server.graph.algorithm.DFSVisit;
+import org.hit.internetprogramming.eoh.server.graph.algorithm.Submarines;
 import org.hit.internetprogramming.eoh.server.impl.Graphs;
 
 import java.util.ArrayList;
@@ -33,7 +35,7 @@ import java.util.Set;
  * @since 21-July-21
  */
 @Log4j2
-public class Submarines implements Action {
+public class FindSubmarines implements Action {
     @Override
     public Response execute(ActionContext actionContext) {
         IGraph<Index> graph = Graphs.getInstance().getGraph(actionContext.getClientInfo());
@@ -41,19 +43,9 @@ public class Submarines implements Action {
         if (graph == null) {
             return Response.error(HttpStatus.NOT_FOUND.getCode(), "No graph was initialized. Please put graph or generate one", actionContext.getRequest().isHttp());
         }
-        List<Set<Index>> connectedComponentsList = new ArrayList<>();
-        Set<Index> connectedComponent = new HashSet<>();
-        connectedComponent.add(new Index(2,1));
-        connectedComponent.add(new Index(2,2));
-        connectedComponent.add(new Index(1,0));
-        connectedComponent.add(new Index(1,2));
-        connectedComponent.add(new Index(0,0));
-        connectedComponent.add(new Index(0,2));
-        connectedComponent.add(new Index(2,0));
 
-        connectedComponentsList.add(connectedComponent);
-        System.out.println(connectedComponentsList);
+        Submarines submarines = new Submarines();
 
-        return Response.ok();
+        return Response.ok(HttpStatus.OK.getCode(), submarines.findSubmarines(graph), actionContext.getRequest().isHttp());
     }
 }
