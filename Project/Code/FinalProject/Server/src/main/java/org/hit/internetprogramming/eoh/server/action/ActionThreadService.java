@@ -167,6 +167,10 @@ public class ActionThreadService implements ExecutorService {
 
     @Override
     public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks) throws InterruptedException {
+        if ((tasks == null) || tasks.isEmpty()) {
+            return new ArrayList<>();
+        }
+
         if (tasks.iterator().next() instanceof ForkJoinTask) {
             return forkJoinThreadPool.invokeAll(tasks);
         }
@@ -176,6 +180,10 @@ public class ActionThreadService implements ExecutorService {
 
     @Override
     public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException {
+        if ((tasks == null) || tasks.isEmpty()) {
+            return new ArrayList<>();
+        }
+
         if (tasks.iterator().next() instanceof ForkJoinTask) {
             return forkJoinThreadPool.invokeAll(tasks, timeout, unit);
         }
@@ -185,6 +193,10 @@ public class ActionThreadService implements ExecutorService {
 
     @Override
     public <T> T invokeAny(Collection<? extends Callable<T>> tasks) throws InterruptedException, ExecutionException {
+        if ((tasks == null) || tasks.isEmpty()) {
+            return null;
+        }
+
         if (tasks.iterator().next() instanceof ForkJoinTask) {
             return forkJoinThreadPool.invokeAny(tasks);
         }
@@ -194,6 +206,10 @@ public class ActionThreadService implements ExecutorService {
 
     @Override
     public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+        if ((tasks == null) || tasks.isEmpty()) {
+            return null;
+        }
+
         if (tasks.iterator().next() instanceof ForkJoinTask) {
             return forkJoinThreadPool.invokeAny(tasks, timeout, unit);
         }
