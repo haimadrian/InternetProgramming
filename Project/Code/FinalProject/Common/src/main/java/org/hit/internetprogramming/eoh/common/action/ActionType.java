@@ -71,6 +71,11 @@ public enum ActionType {
     SHORTEST_PATHS_IN_WEIGHTED_GRAPH,
 
     /**
+     * Calculates how many submarines there are in a graph.
+     */
+    SUBMARINES,
+
+    /**
      * Print graph to console
      */
     PRINT_GRAPH,
