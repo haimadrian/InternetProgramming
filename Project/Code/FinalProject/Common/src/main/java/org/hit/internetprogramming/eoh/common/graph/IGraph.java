@@ -88,8 +88,8 @@ public interface IGraph<T> {
     */
    List<T> getVertices();
 
-   /**t all edges
-    * Gein this graph.<br/>
+   /**
+    * Get all edges in this graph.<br/>
     * This method can take {@link #getGraphSize()}*4 operations in order to collect all edges in the graph.
     * @return All of the edges in this graph
     */

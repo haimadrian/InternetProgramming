@@ -21,17 +21,17 @@ import java.util.Set;
 /**
  * A class for receiving all the submarines in a graph.<br/>
  * The graph is represented by a matrix.
- *
+ * <p>
  * Submarine rules:
  * 1. at least 2 horizontal 1-node
  * 2. at least 2 vertical 1-node
  * 3. There can be no two nodes diagonally unless
- *    there are sections 1 and 2 for both.
+ * there are sections 1 and 2 for both.
  * 4. The minimum distance between two submarines
- *    (regardless of orientation) is one square (0-node).
+ * (regardless of orientation) is one square (0-node).
  *
- * @see FindConnectedComponents
  * @author Eden Zadikove
+ * @see FindConnectedComponents
  * @since 21-July-21
  */
 @Log4j2

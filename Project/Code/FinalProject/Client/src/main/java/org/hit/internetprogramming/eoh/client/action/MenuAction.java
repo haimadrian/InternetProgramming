@@ -20,7 +20,7 @@ public enum MenuAction {
     GET_REACHABLES("Get Reachable Vertices", ActionType.GET_REACHABLES),
     CONNECTED_COMPONENTS("Get Connected Components ", ActionType.CONNECTED_COMPONENTS),
     SHORTEST_PATHS("Find Shortest Paths ", ActionType.SHORTEST_PATHS),
-    SUBMARINES("Find submarines in a graph", ActionType.SUBMARINES),
+    SUBMARINES("Count Submarines in a Graph", ActionType.SUBMARINES),
     PRINT_GRAPH("Print Graph", ActionType.PRINT_GRAPH);
 
     /**
