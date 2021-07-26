@@ -96,7 +96,7 @@ public class ClientMain {
                         executeRequest(new Request(actionType, new TwoVerticesBody<>(source, dest)), false, new TypeReference<List<Collection<Index>>>() {});
                         break;
                     case SUBMARINES:
-                        executeRequest(new Request(ActionType.SUBMARINES), true, null);
+                        executeRequest(new Request(ActionType.SUBMARINES), false, new TypeReference<Integer>() {});
                         break;
                     case PRINT_GRAPH:
                         executeRequest(new Request(ActionType.PRINT_GRAPH), true, null);

@@ -42,9 +42,7 @@ public class FindSubmarines implements Action {
         if (graph == null) {
             return Response.error(HttpStatus.NOT_FOUND.getCode(), "No graph was initialized. Please put graph or generate one", actionContext.getRequest().isHttp());
         }
-
-        Submarines submarines = new Submarines(graph);
-
-        return Response.ok(HttpStatus.OK.getCode(), submarines.findSubmarines(), actionContext.getRequest().isHttp());
+        Submarines submarines = new Submarines();
+        return Response.ok(HttpStatus.OK.getCode(), submarines.findSubmarines(graph), actionContext.getRequest().isHttp());
     }
 }

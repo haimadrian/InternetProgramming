@@ -34,7 +34,7 @@ public class Index {
     @Getter
     private final int column;
 
-    public Index(int row, int column) {
+    private Index(int row, int column) {
         this.row = row;
         this.column = column;
     }
