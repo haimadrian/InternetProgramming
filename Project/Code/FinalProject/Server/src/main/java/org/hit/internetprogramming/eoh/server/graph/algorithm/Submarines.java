@@ -17,6 +17,10 @@ public class Submarines {
     public int findSubmarines (IGraph<Index> graph) {
         ConnectedComponents connectedComponents = new ConnectedComponents();
         List<Set<Index>> allCC = connectedComponents.collect(graph);
+
+        if(allCC == null)
+            return 0;
+
         List<Callable<Void>> tasks = new ArrayList<>();
         Lock lock = new ReentrantLock();
         List <Boolean> countResults = new ArrayList<>();
