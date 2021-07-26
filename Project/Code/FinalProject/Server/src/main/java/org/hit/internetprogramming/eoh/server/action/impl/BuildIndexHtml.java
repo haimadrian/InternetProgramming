@@ -1,5 +1,6 @@
 package org.hit.internetprogramming.eoh.server.action.impl;
 
+import org.hit.internetprogramming.eoh.common.comms.HttpStatus;
 import org.hit.internetprogramming.eoh.common.comms.Response;
 import org.hit.internetprogramming.eoh.server.action.Action;
 import org.hit.internetprogramming.eoh.server.action.ActionContext;
@@ -26,6 +27,6 @@ public class BuildIndexHtml implements Action {
         index.append("<li><a href=\"").append(SHORTEST_PATHS_PATH).append("?srcrow=0&srccol=0&destrow=1&destcol=4\" style=\"color:white\">Find shortest paths</a></li>");
         index.append("</ul>");
 
-        return Response.ok(index.toString());
+        return new Response(HttpStatus.OK.getCode(), null, index.toString(), true);
     }
 }
