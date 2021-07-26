@@ -22,8 +22,8 @@ public class Submarines {
         List <Boolean> countResults = new ArrayList<>();
 
         allCC.forEach(connectedComponent -> tasks.add(() -> {
+            lock.lock();
             try {
-                lock.lock();
                 countResults.add(checkSubmarine(connectedComponent));
             } finally {
                 lock.unlock();
