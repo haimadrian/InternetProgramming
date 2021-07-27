@@ -3,8 +3,8 @@ package org.hit.internetprogramming.eoh.server.impl;
 import org.hit.internetprogramming.eoh.common.graph.IGraph;
 import org.hit.internetprogramming.eoh.server.common.ClientInfo;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A singleton used to cache graph for each client, so we can handle separate client requests independently,
@@ -19,7 +19,7 @@ public class Graphs {
     private final Map<ClientInfo, IGraph<?>> clientToGraph;
 
     private Graphs() {
-        clientToGraph = new HashMap<>();
+        clientToGraph = new ConcurrentHashMap<>();
     }
 
     /**
